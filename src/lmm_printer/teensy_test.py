@@ -17,4 +17,4 @@ if port is None:
 
 ser = serial.Serial(port , baudrate = 9600 , timeout = 1)
 
-ser.write(b"H0")
+ser.write(b"MR0 50\n")
