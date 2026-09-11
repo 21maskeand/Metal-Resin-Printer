@@ -8,5 +8,6 @@ def image_to_arr(path):
     print("-- Converting image to bytes --")
     im_frame = Image.open(path)
     pixeldata = np.transpose(np.array(im_frame))
+    
 
     return  pixeldata

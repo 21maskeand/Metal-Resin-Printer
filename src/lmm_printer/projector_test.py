@@ -31,11 +31,14 @@ try:
     DMD.set_background(intensity = 0, both_buffers = True)
 
     # Send an image, where the raspberry pi determines the exposure time
-    DMD.send_image_to_buffer('media/openMLA_logo_2560x1440.png', 0,0)  # send the image data into FPGA buffer over SPI
+    DMD.send_image_to_buffer('media/openMLA_logo_1280x720.png', 0,0)  # send the image data into FPGA buffer over SPI
     DMD.swap_buffer()
-    DMD.expose_pattern(exposed_frames = -1)  # infinite exposure time, until we send the stop_exposure() command
-    time.sleep(30)
-    DMD.stop_exposure()  # and then manually stop exposure
+    DMD.expose_pattern(exposed_frames = 10*60)  # infinite exposure time, until we send the stop_exposure() command
+    DMD.send_image_to_buffer('media/openMLA_logo_2560x1440.png', 0,0)
+    time.sleep(10)
+    DMD.swap_buffer()
+    DMD.expose_pattern(exposed_frames = 10*60)  # infinite exposure time, until we send the stop_exposure() command
+    time.sleep(10)
 
 except KeyboardInterrupt:
     GPIO.cleanup()
