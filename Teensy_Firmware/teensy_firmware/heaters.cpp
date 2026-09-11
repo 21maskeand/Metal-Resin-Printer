@@ -5,11 +5,26 @@
 #include <QuickPID.h>
 #include <Arduino.h>
 
+static OneWire one_wires[num_heaters] = 
+{
+  OneWire(probe_pins[0]) , 
+  OneWire(probe_pins[1])
+};
+
 static DS18B20 probes[num_heaters] = 
 {
-  DS18B20(probe_pins[0]) , 
-  DS18B20(probe_pins[1])
+  DS18B20(&one_wires[0]) , 
+  DS18B20(&one_wires[1])
 };
+
+static bool converting[num_heaters] = {false , false};
+static unsigned long convert_start_times[num_heaters] = {0 , 0};
+static const unsigned long convert_times[num_heaters] = 
+{
+  resolution_mode_to_read_time[resolution_modes[0]] , 
+  resolution_mode_to_read_time[resolution_modes[1]]
+};
+
 
 static float temps[num_heaters];
 static float outputs[num_heaters];
@@ -27,6 +42,10 @@ void heaters_Init()
   for (int i = 0; i < num_heaters; i++)
   {
     pinMode(heater_pins[i] , OUTPUT);
+
+    probes[i].begin();
+    probes[i].setResolution(resolution_mode_to_bits[i]);
+
     pids[i].SetOutputLimits(0.0 , 1.0);
     pids[i].SetSampleTimeUs(window_size*1000);
     pids[i].SetMode(QuickPID::Control::automatic);
@@ -37,8 +56,17 @@ static void probes_Update()
 {
   for (int i = 0; i< num_heaters; i++)
   {
-    probes[i].selectNext();
-    temps[i] = probes[i].getTempC();
+    if (!converting[i])
+    {
+      probes[i].requestTemperatures();
+      convert_start_times[i] = millis();
+      converting[i] = true;
+    }
+    else if (millis() - convert_start_times[i] >= convert_times[i])
+    {
+      temps[i] = probes[i].getTempC();
+      converting[i] = false;
+    }
   }
 }
 

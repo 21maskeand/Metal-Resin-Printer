@@ -49,5 +49,8 @@ constexpr float kps[2] = {.1 , 1};
 constexpr float kis[2] = {0 , 0};
 constexpr float kds[2] = {1 , 2};
 constexpr int window_size = 5000;
+constexpr int resolution_modes[2] = {0 , 0}; // 0 --> 9 bits , 1 --> 10 bits , 2 --> 11 bits , 3 --> 12 bits
+constexpr int resolution_mode_to_bits[4] = {9 , 10 , 11 , 12};
+constexpr int resolution_mode_to_read_time[4] = {94 , 188 , 376 , 751}; // ms
 
 
