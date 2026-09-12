@@ -50,6 +50,15 @@ static void handle_Command(char *command)
     }
   }
 
+  else if (command[0] == 'E')
+  {
+    char *space = strchr(command , ' ');
+    if (space)
+    {
+      Serial.println(space + 1);
+    }
+  }
+
 
 }
 

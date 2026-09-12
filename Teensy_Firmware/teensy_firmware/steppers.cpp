@@ -114,7 +114,7 @@ static void home_One_Stepper_Update(int id)
         homing_phase[id] = NIL;
         axes[id].setMaxSpeed(max_speeds_steps[id]);
         axes[id].setCurrentPosition(0);
-        Serial.print("Axis "); Serial.print(id); Serial.println(" has been homed.");
+        // Serial.print("Axis "); Serial.print(id); Serial.println(" has been homed.");
       }
       else
       {
