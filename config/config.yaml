@@ -1,5 +1,8 @@
 teensy:
   vid: 0x16C0
-  baud: 9600
+  baudrate: 9600
   timeout: 1.0
   enable_fallback: true
+
+projector:
+  spi_max_speed: 125000000

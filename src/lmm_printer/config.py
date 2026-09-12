@@ -1,6 +1,7 @@
 import yaml
 
-def load_Config(path = "config/config.yaml"):
+def load_Config(path):
+    path = "config/" + path
     with open(path , "r") as file:
-        cnfg = yaml.safe_load(file)
-    return cnfg
+        config = yaml.safe_load(file)
+    return config

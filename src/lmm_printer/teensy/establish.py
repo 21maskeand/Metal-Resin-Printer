@@ -1,5 +1,6 @@
 import serial
 import serial.tools.list_ports
+from enum import Enum , auto
 
 def find_Teensy_Port(teensy_vid , enable_fallback):
     for port in serial.tools.list_ports.comports():
@@ -21,19 +22,15 @@ def is_Teensy_Listening(ser):
 def return_Teensy_Serial(teensy_vid , baudrate , timeout , enable_fallback):
     port = find_Teensy_Port(teensy_vid , False)
     if port is None:
-        print("No Teensy port found.")
-        return None
+        return None , "NO_TEENSY_PORT"
 
     try:
         ser = open_Serial(port , baudrate , timeout)   
     except Exception as e:
-        print("Error opening the serial port:", port , "Error was:")
-        print(e)
-        return None
+        return None , "CANT_OPEN_PORT" , "Error opening the serial port:", port , "Error was:" + e
 
     if is_Teensy_Listening(ser):
-        return ser
+        return ser , "CONNECTED"
     else:
-        print("Teensy not listening.")
-        return None
+        return None , "TEENSY_NOT_LISTENING"
 

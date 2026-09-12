@@ -1,0 +1,22 @@
+import RPi.GPIO as GPIO
+import smbus  # I2C
+import spidev  # SPI
+from lmm_printer.vendored.UV_projector.controller import DLPC1438
+
+GPIO.setmode(GPIO.BCM)
+
+def return_Projector(spi_max_speed):
+    try:
+        # Initialize I2C (SMBus) on channel 1
+        i2c = smbus.SMBus(1)
+
+        # Initialise SPI (bus 0, with CE0 as chip select pin)
+        spi = spidev.SpiDev()
+        spi.open(0, 0)
+        spi.max_speed_hz = spi_max_speed  # FPGA/DCLP1438 limit: 50 MB/s; 125MHz seems limit for Pi zero 1W
+        spi.mode = 3 
+
+        # Initialise the DLPC1438
+        projector = DLPC1438(i2c, spi)
+
+        return projector
