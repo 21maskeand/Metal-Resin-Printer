@@ -32,7 +32,7 @@ constexpr int min_pulse_width = 5;                        // us minimum pulse wi
 // LIMIT SWITCH PINS
 
 // Reservoir: 0 , Build: 1 , Recoater: 2
-constexpr int switch_pins[3] = {22 , 21 , 20};
+constexpr int switch_pins[3] = {1 , 7 , 20};
 constexpr bool normally_open[3] = {false , false , true};
 constexpr float homing_fast_speed_fracs[3] = {1 , 1 , -0.5};
 constexpr float homing_slow_speed_fracs[3] = {.1 , .1 , -.1};
@@ -43,14 +43,23 @@ constexpr float backoff_dist[3] = {-4 , -4 , 4};
 
 // Chamber: 0 , Recoater: 1
 constexpr int num_heaters = 2;
-constexpr int probe_pins[2] = {4 , 5};
-constexpr int heater_pins[2] = {3 , 2};
-constexpr float kps[2] = {.1 , 1};
-constexpr float kis[2] = {0 , 0};
-constexpr float kds[2] = {1 , 2};
+constexpr int num_probes = 3; // The number of probes must be greater than or equal to the number of heaters. The first ones are assinged to a heater.
+constexpr int probe_pins[num_probes] = {22 , 23 , 21};
+constexpr int heater_pins[num_heaters] = {3 , 2};
+constexpr float kps[num_heaters] = {1 , .1};
+constexpr float kis[num_heaters] = {0 , 0};
+constexpr float kds[num_heaters] = {1 , 2};
 constexpr int window_size = 5000;
-constexpr int resolution_modes[2] = {0 , 0}; // 0 --> 9 bits , 1 --> 10 bits , 2 --> 11 bits , 3 --> 12 bits
-constexpr int resolution_mode_to_bits[4] = {9 , 10 , 11 , 12};
-constexpr int resolution_mode_to_read_time[4] = {94 , 188 , 376 , 751}; // ms
+constexpr unsigned long temp_read_intervals[num_probes] = {1000 , 1000 , 1000};
+constexpr float resistance_nominal[num_probes] = {100000.0 , 100000.0 , 100000.0};
+constexpr float temp_nominal[num_probes] = {25.0 , 25.0 , 25.0};
+constexpr float beta[num_probes] = {3950.0 , 3950.0 , 3950.0};
+constexpr float series_resistance[num_probes] = {50000.0 , 50000.0 , 50000.0};
+constexpr int resolution_mode = 0; // 0 --> 8 bits , 1 --> 10 bits , 2 --> 12 bits
+constexpr int resolution_mode_to_bits[4] = {8 , 10 , 12};
+constexpr int resolution_mode_to_adc_max[4] = {255 , 1023 , 4095};
+constexpr int averaging_mode = 1;
+constexpr int averaging_mode_to_n[4] = {4 , 8 , 16 , 32};
+
 
 

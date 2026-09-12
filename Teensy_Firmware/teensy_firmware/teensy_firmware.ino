@@ -19,5 +19,6 @@ void loop() {
   pid_Update();
   
   Serial.print("Chamber at: "); Serial.print(return_Temp(0)); Serial.print(" of  "); Serial.print(return_Setpoint(0)); 
-  Serial.print(", Recoater at: "); Serial.print(return_Temp(1)); Serial.print(" of  "); Serial.println(return_Setpoint(1)); 
+  Serial.print(", Recoater Heater at: "); Serial.print(return_Temp(1)); Serial.print(" of  "); Serial.print(return_Setpoint(1)); 
+  Serial.print(", Recoater Front: "); Serial.print(return_Temp(2)); Serial.print(" of  "); Serial.println(return_Setpoint(1)); 
 }

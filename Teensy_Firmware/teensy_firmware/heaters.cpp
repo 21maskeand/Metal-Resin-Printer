@@ -1,32 +1,13 @@
 //heaters.cpp
 #include "heaters.h"
 #include "config.h"
-#include <DS18B20.h>
 #include <QuickPID.h>
+#include <algorithm>
 #include <Arduino.h>
 
-static OneWire one_wires[num_heaters] = 
-{
-  OneWire(probe_pins[0]) , 
-  OneWire(probe_pins[1])
-};
-
-static DS18B20 probes[num_heaters] = 
-{
-  DS18B20(&one_wires[0]) , 
-  DS18B20(&one_wires[1])
-};
-
-static bool converting[num_heaters] = {false , false};
-static unsigned long convert_start_times[num_heaters] = {0 , 0};
-static const unsigned long convert_times[num_heaters] = 
-{
-  resolution_mode_to_read_time[resolution_modes[0]] , 
-  resolution_mode_to_read_time[resolution_modes[1]]
-};
-
-
-static float temps[num_heaters];
+static int last_temp_read_times[2] = {0 , 0};
+static const int adc_max = resolution_mode_to_adc_max[resolution_mode];
+static float temps[num_probes];
 static float outputs[num_heaters];
 static float setpoints[num_heaters] = {0 , 0};
 static int window_start_times[num_heaters] = {0 , 0};
@@ -39,12 +20,12 @@ static QuickPID pids[num_heaters] =
 
 void heaters_Init()
 {
+  analogReadResolution(resolution_mode_to_bits[resolution_mode]);
+  analogReadAveraging(averaging_mode_to_n[averaging_mode]);
+
   for (int i = 0; i < num_heaters; i++)
   {
     pinMode(heater_pins[i] , OUTPUT);
-
-    probes[i].begin();
-    probes[i].setResolution(resolution_mode_to_bits[i]);
 
     pids[i].SetOutputLimits(0.0 , 1.0);
     pids[i].SetSampleTimeUs(window_size*1000);
@@ -52,21 +33,33 @@ void heaters_Init()
   }
 }
 
+static float read_Thermister(int id)
+{
+  int raw = analogRead(probe_pins[id]);
+  if (raw <= 0) raw = 1;
+  if (raw >= adc_max) raw = adc_max - 1;
+  float resistance = series_resistance[id] * (float)raw / (float)(adc_max - raw);
+
+  float t = resistance / resistance_nominal[id];
+  t = log(t);
+  t /= beta[id];
+  t += 1.0 / (temp_nominal[id] + 273.15);
+  t = 1.0 / t;
+  
+  return t - 273.15;
+
+}
+
 static void probes_Update()
 {
-  for (int i = 0; i< num_heaters; i++)
+  for (int i = 0; i< num_probes; i++)
   {
-    if (!converting[i])
+    if (millis() - last_temp_read_times[i] >= temp_read_intervals[i])
     {
-      probes[i].requestTemperatures();
-      convert_start_times[i] = millis();
-      converting[i] = true;
+      temps[i] = read_Thermister(i);
+      last_temp_read_times[i] = millis();
     }
-    else if (millis() - convert_start_times[i] >= convert_times[i])
-    {
-      temps[i] = probes[i].getTempC();
-      converting[i] = false;
-    }
+    
   }
 }
 
