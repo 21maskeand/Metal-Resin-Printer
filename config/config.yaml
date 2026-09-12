@@ -1,1 +1,5 @@
-
+teensy:
+  vid: 0x16C0
+  baud: 9600
+  timeout: 1.0
+  enable_fallback: true
