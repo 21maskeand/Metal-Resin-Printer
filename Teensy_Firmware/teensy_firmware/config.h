@@ -20,7 +20,7 @@ constexpr int microstepping_mode_to_steps[6] = {1 , 2 , 4 , 8 , 16 , 32};
 
 // Reservoir: 0 , Build: 1 , Recoater: 2
 constexpr int num_axes = 3;
-constexpr int step_pins[3] = {19 , 17 , 15};
+constexpr int step_pins[3] = {19 , 17 , 15}; // 19 17 15
 constexpr int dir_pins[3] = {18 , 16 , 14};
 constexpr int leads[3] = {4 , 4 , 8};                     // mm/rot or whatever other unit per rotation
 constexpr int steps_per_rotation[3] = {200 , 200 , 200};  // steps/rot (full steps)
@@ -32,7 +32,7 @@ constexpr int min_pulse_width = 5;                        // us minimum pulse wi
 // LIMIT SWITCH PINS
 
 // Reservoir: 0 , Build: 1 , Recoater: 2
-constexpr int switch_pins[3] = {1 , 7 , 20};
+constexpr int switch_pins[3] = {1 , 7 , 20}; // 1 7 20
 constexpr bool normally_open[3] = {false , false , true};
 constexpr float homing_fast_speed_fracs[3] = {1 , 1 , -0.5};
 constexpr float homing_slow_speed_fracs[3] = {.1 , .1 , -.1};

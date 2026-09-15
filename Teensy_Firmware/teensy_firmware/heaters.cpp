@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <Arduino.h>
 
-static int last_temp_read_times[2] = {0 , 0};
+static int last_temp_read_times[num_probes] = {0};
 static const int adc_max = resolution_mode_to_adc_max[resolution_mode];
 static float temps[num_probes];
 static float outputs[num_heaters];

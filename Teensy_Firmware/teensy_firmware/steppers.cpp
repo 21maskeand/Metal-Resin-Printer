@@ -50,6 +50,9 @@ void steppers_Init()
     axes[i].setDistancePerRotation(leads[i]);
     axes[i].setMinPulseWidth(min_pulse_width);
 
+    // Serial.print("init "); Serial.print(i);
+    // Serial.print(" fast="); Serial.println(fast_homing_speeds_steps[i]);
+
   }
 
   // Initialize Microstepping Pins
@@ -66,13 +69,15 @@ void steppers_Init()
 
 static void home_One_Stepper_Update(int id)
 {
+
   switch (homing_phase[id])
   {
     case FAST:
       axes[id].setSpeed(fast_homing_speeds_steps[id]);
       if (switch_Pressed(id))
       {
-        // Serial.println("Pressed");
+        // Serial.print("fast "); Serial.print(id);
+        // Serial.print(" fast="); Serial.println(fast_homing_speeds_steps[id]);
         axes[id].setMaxSpeed(fast_homing_speeds_steps[id]);
         axes[id].moveRelative(backoff_dist[id]);
         homing_phase[id] = BACKOFF;
@@ -86,6 +91,8 @@ static void home_One_Stepper_Update(int id)
     case BACKOFF:
       if (axes[id].distanceToGo() == 0)
       {
+        // Serial.print("backoff "); Serial.print(id);
+        // Serial.print(" fast="); Serial.println(fast_homing_speeds_steps[id]);
         axes[id].setSpeed(slow_homing_speeds_steps[id]);
         homing_phase[id] = SLOW;
       }
@@ -98,6 +105,8 @@ static void home_One_Stepper_Update(int id)
     case SLOW:
       if (switch_Pressed(id))
       {
+        // Serial.print("slow "); Serial.print(id);
+        // Serial.print(" fast="); Serial.println(fast_homing_speeds_steps[id]);
         axes[id].moveRelative(settings.homing_offset_dists[id]);
         axes[id].setMaxSpeed(slow_homing_speeds_steps[id]);
         homing_phase[id] = OFFSET;
@@ -111,6 +120,8 @@ static void home_One_Stepper_Update(int id)
     case OFFSET:
       if (axes[id].distanceToGo() == 0)
       {
+        // Serial.print("offset "); Serial.print(id);
+        // Serial.print(" fast="); Serial.println(fast_homing_speeds_steps[id]);
         homing_phase[id] = NIL;
         axes[id].setMaxSpeed(max_speeds_steps[id]);
         axes[id].setCurrentPosition(0);
@@ -164,6 +175,8 @@ void move_Stepper_Absolute(int id , float move)
 void home_Stepper(int id)
 {
   if (id < 0 || id >= num_axes) return;
+  // Serial.print("home "); Serial.print(id);
+  // Serial.print(" fast="); Serial.print(fast_homing_speeds_steps[id]);
   homing_phase[id] = FAST;
 }
 
