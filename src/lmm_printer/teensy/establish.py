@@ -1,6 +1,6 @@
 import serial
 import serial.tools.list_ports
-from enum import Enum , auto
+from lmm_printer.core.types import Result , State
 
 def find_Teensy_Port(teensy_vid , enable_fallback):
     for port in serial.tools.list_ports.comports():
@@ -22,15 +22,17 @@ def is_Teensy_Listening(ser):
 def return_Teensy_Serial(teensy_vid , baudrate , timeout , enable_fallback):
     port = find_Teensy_Port(teensy_vid , False)
     if port is None:
-        return None , "NO_TEENSY_PORT"
+        return Result(value = None , state = State.ERROR , message = "No Teensy port found.")
 
     try:
         ser = open_Serial(port , baudrate , timeout)   
     except Exception as e:
-        return None , "CANT_OPEN_PORT" , "Error opening the serial port:", port , "Error was:" + e
+        return Result(value = None , state = State.ERROR , message = "Can't open Teensy port. " + "Error opening the serial port: " + port + " Error was: " + e)
 
     if is_Teensy_Listening(ser):
-        return ser , "CONNECTED"
+        return Result(value = ser , state = State.SUCCESS , message = "Teensy connection successful.")
     else:
-        return None , "TEENSY_NOT_LISTENING"
+        return Result(value = None , state = State.ERROR , message = "Teensy not listening.")
+
+
 

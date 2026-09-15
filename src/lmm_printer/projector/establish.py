@@ -2,6 +2,7 @@ import RPi.GPIO as GPIO
 import smbus  # I2C
 import spidev  # SPI
 from lmm_printer.vendored.UV_projector.controller import DLPC1438
+from lmm_printer.core.types import Result , State
 
 GPIO.setmode(GPIO.BCM)
 
@@ -19,4 +20,8 @@ def return_Projector(spi_max_speed):
         # Initialise the DLPC1438
         projector = DLPC1438(i2c, spi)
 
-        return projector
+        return Result(value = projector , state = State.SUCCESS , message = "Projector connection successful.")
+
+    except Exception as e:
+        GPIO.cleanup()
+        return Result(value = None , state = State.ERROR , message = "Can't open projector. " + "Error was: " + e)
