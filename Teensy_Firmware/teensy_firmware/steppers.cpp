@@ -72,7 +72,7 @@ static void home_One_Stepper_Update(int id)
       axes[id].setSpeed(fast_homing_speeds_steps[id]);
       if (switch_Pressed(id))
       {
-        Serial.println("Pressed");
+        // Serial.println("Pressed");
         axes[id].setMaxSpeed(fast_homing_speeds_steps[id]);
         axes[id].moveRelative(backoff_dist[id]);
         homing_phase[id] = BACKOFF;
