@@ -1,7 +1,7 @@
 import RPi.GPIO as GPIO
 import smbus  # I2C
 import spidev  # SPI
-from lmm_printer.vendored.UV_projector.controller import DLPC1438
+from lmm_printer.projector.dlp import DLP
 from lmm_printer.core.types import Result , State
 
 GPIO.setmode(GPIO.BCM)
@@ -18,7 +18,7 @@ def return_Projector(spi_max_speed):
         spi.mode = 3 
 
         # Initialise the DLPC1438
-        projector = DLPC1438(i2c, spi)
+        projector = DLP(i2c, spi)
 
         return Result(value = projector , state = State.SUCCESS , message = "Projector connection successful.")
 

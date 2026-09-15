@@ -27,7 +27,7 @@ def return_Teensy_Serial(teensy_vid , baudrate , timeout , enable_fallback):
     try:
         ser = open_Serial(port , baudrate , timeout)   
     except Exception as e:
-        return Result(value = None , state = State.ERROR , message = "Can't open Teensy port. " + "Error opening the serial port: " + port + " Error was: " + e)
+        return Result(value = None , state = State.ERROR , message = "Can't open Teensy port. " + "Error opening the serial port: " + port + " Error was: " + str(e))
 
     if is_Teensy_Listening(ser):
         return Result(value = ser , state = State.SUCCESS , message = "Teensy connection successful.")

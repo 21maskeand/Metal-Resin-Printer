@@ -23,7 +23,7 @@ def return_RM_Drives():
     if len(drives) == 0:
         drives = Result(value = None , state = State.ERROR , message = "No removable drives found.")
     else:
-        drives = Result(value = drives , state = State.ERROR , message = "Found drives: " + ", ".join(mnt for dev , mnt in drives))
+        drives = Result(value = drives , state = State.SUCCESS , message = "Found drives: " + ", ".join(mnt for dev , mnt in drives))
     return drives
 
 def cli_Choose_File(drives):
@@ -49,7 +49,8 @@ def cli_Choose_File(drives):
         if response in file_names:
             index = file_names.index(response)
             mnt = file_mnts[index]
-            return Result(value = {"name": response , "mnt": mnt} , state = State.SUCCESS , message = "Successfully chose file: " + response + ", at mount: " + mnt + ".")
+            return Result(value = Path(mnt) / response , state = State.SUCCESS , message = "Successfully chose file: " + response + ", at mount: " + mnt + ".")
         else:
             print("File name invalid.")
             return cli_Choose_File(drives)
+
