@@ -12,6 +12,8 @@ T = TypeVar("T")
 class State(Enum):
     SUCCESS = "success"
     ERROR = "error"
+    OPERATING = "operating"
+    IDLE = "idle"
 
 @dataclass
 class Result(Generic[T]):
@@ -33,6 +35,7 @@ class NanoDLP_File:
         try:
             image = np.array(image)
             image = image.reshape(image.shape[0] , image.shape[1]*3)
+            image = np.flip(image , axis = 0)
             return Result(value = image , state = State.SUCCESS , message = "Successfully decoded image.")
         except Exception as e:
             return Result(value = None , state = State.ERROR , message = "Likely one of the image dimensions isn't divisible by 3 (for nanodlp). Try to flip axes in slicer. Error was: " + str(e)) 
@@ -44,6 +47,9 @@ class NanoDLP_File:
         try:
             with self._zip.open("options.json") as f:
                 options = json.load(f)
+            with self._zip.open("profile.json") as f:
+                profile = json.load(f)
+            options = {"exposure_time": profile["CureTime"] , "layer_thickness": options["Thickness"]}
             return Result(value = options , state = State.SUCCESS , message = "Successfully loaded options.")
         except Exception as e:
             return Result(value = None , state = State.ERROR , message = "Couldn't open options.json. Error was: " + str(e))
