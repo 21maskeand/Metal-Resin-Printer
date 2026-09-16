@@ -63,8 +63,16 @@ def run(args , config):
     reader.start_Thread()
 
     user_Continue("Continue to homing? Make sure the lid is lifted.")
+    # printer.home_Axes()
+    # temp = printer.get_Temp(0)
+    # print(temp)
+    printer.teensy.send_Command("GT0")
+    print(printer.teensy.get_Messages())
 
-    printer.home_Axes()
+    printer.teensy.send_Command("E hello 5")
+    printer.listening_for.append("hello")
+    res = printer.wait_For_Response()
+    print(res)
 
 
         
