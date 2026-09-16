@@ -17,12 +17,16 @@ class Printer:
         if wait:
             self.wait_For_Response()
 
-    def home_Axes(self):
-        for i in range(3):
-            self.home_Axis(i)
+    def home_Axes(self , ids = None):
+        if ids is None:
+            for i in range(3):
+                self.home_Axis(i)
+        else:
+            for i in ids:
+                self.home_Axis(i)
 
     def get_Temp(self , probe_id):
-        command = "GT" + str(probe_id)
+        command = "RT" + str(probe_id)
         self.teensy.send_Command(command)
         self.listening_for.append(command)
         response = self.wait_For_Response()[0]
@@ -30,7 +34,7 @@ class Printer:
         return temp
         
 
-    def wait_For_Response(self , timeout = 5.0):
+    def wait_For_Response(self , timeout = 60*2):
         return_list = []
         start = time.monotonic()
         while len(self.listening_for) != 0:
