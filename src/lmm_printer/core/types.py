@@ -12,8 +12,6 @@ T = TypeVar("T")
 class State(Enum):
     SUCCESS = "success"
     ERROR = "error"
-    OPERATING = "operating"
-    IDLE = "idle"
 
 @dataclass
 class Result(Generic[T]):

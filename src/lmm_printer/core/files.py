@@ -32,7 +32,7 @@ def cli_Choose_File(drives):
 
     file_names = []
     file_mnts = []
-    for dev , mnt in drives.value:
+    for dev , mnt in drives:
         root = Path(mnt)
         for file in root.iterdir():
             file_names.append(file.name)

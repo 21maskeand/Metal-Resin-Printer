@@ -1,10 +1,19 @@
 
 
-def home_Axis(ser , axis_id):
-    command_string = "H" + str(axis_id) + "\n"
-    command_string = command_string.encode()
-    ser.write(command_string)
+class Printer:
+    def __init__(self , teensy , projector , options):
+        self.teensy = teensy
+        self.projector = projector
+        self.options = options
 
-def home_Axes(ser):
-    for i in range(3):
-        home_Axis(ser , i)
+        self.teensy.start_Thread()
+
+        self.listening_for = []
+
+    def home_Axis(self , axis_id):
+        command = "H" + str(axis_id)
+        self.teensy.send_Command(command)
+
+    def home_Axes(self):
+        for i in range(3):
+            self.home_Axis(i)
