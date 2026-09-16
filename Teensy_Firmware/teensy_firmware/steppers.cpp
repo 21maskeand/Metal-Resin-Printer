@@ -24,6 +24,7 @@ enum Homing_Phase : uint8_t
 };
 
 static Homing_Phase homing_phase[num_axes] = {NIL , NIL , NIL};
+static bool is_Moving[num_axes] = {false};
 
 static float max_speeds_steps[num_axes];
 static float fast_homing_speeds_steps[num_axes];
@@ -125,6 +126,7 @@ static void home_One_Stepper_Update(int id)
         homing_phase[id] = NIL;
         axes[id].setMaxSpeed(max_speeds_steps[id]);
         axes[id].setCurrentPosition(0);
+        Serial.print("H"); Serial.println(id);
         // Serial.print("Axis "); Serial.print(id); Serial.println(" has been homed.");
       }
       else
@@ -150,6 +152,15 @@ void steppers_Update()
     }
     else
     {
+      if (axes[i].distanceToGo() != 0 && is_Moving[i] == false)
+      {
+        is_Moving[i] = true;
+      }
+      else if (axes[i].distanceToGo() == 0 && is_Moving[i] == true)
+      {
+        is_Moving[i] = false;
+        Serial.print("M"); Serial.println(i);
+      }
       axes[i].run();
     }
   }

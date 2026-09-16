@@ -50,6 +50,13 @@ static void handle_Command(char *command)
     }
   }
 
+  else if ((command[0] == 'R') && (command[1] == 'T'))
+  {
+    int probe_id = atoi(command + 2);
+    float temp = return_Temp(probe_id);
+    Serial.print("RT"); Serial.print(probe_id); Serial.print(" "); Serial.println(temp);
+  }
+
   else if (command[0] == 'E')
   {
     char *space = strchr(command , ' ');
