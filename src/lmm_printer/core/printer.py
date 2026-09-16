@@ -46,7 +46,38 @@ class Printer:
         response = self.wait_For_Response()[0]
         temp = float(response.split()[-1])
         return temp
+
+    def set_Heater(self , heater_id , temp):
+        command = "SH" + str(heater_id) + " " + str(temp)    
+        self.teensy.send_Command(command)
+    
+    def start_Heaters(self):
+        self.set_Heater(0 , self.options["chamber"]["temp"])
+        self.set_chamber_temp = self.options["chamber"]["temp"]
+
+        self.set_Heater(1 , self.options["recoater"]["temp"])
+        self.set_recoater_temp = self.options["recoater"]["temp"]
+
+    def check_Heaters(self):
+        chamber_good = False
+        recoater_good = False
+
+        chamber_temp = self.get_Temp(0)
+        recoater_temp = self.get_Temp(2)
+
+        if (self.set_chamber_temp != self.options["chamber"]["temp"]) or (self.set_recoater_temp != self.options["recoater"]["temp"]):
+            self.start_Heaters()
         
+        if self.set_chamber_temp - self.options["chamber"]["valid_diff"] <= chamber_temp <= self.set_chamber_temp + self.options["chamber"]["valid_diff"]:
+            chamber_good = True
+        if self.set_recoater_temp - self.options["recoater"]["valid_diff"] <= recoater_temp <= self.set_recoater_temp + self.options["recoater"]["valid_diff"]:
+            recoater_good = True
+
+        if chamber_good and recoater_good:
+            return True
+        else:
+            return False
+
 
     def wait_For_Response(self , timeout = 60*2):
         return_list = []

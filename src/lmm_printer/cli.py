@@ -57,6 +57,13 @@ def run(args , config):
 
     options = options_result.value
 
+    options["chamber"] = {}
+    options["chamber"]["temp"] = config["chamber"]["temp"]
+    options["chamber"]["valid_diff"] = config["chamber"]["valid_diff"]
+    options["recoater"] = {}
+    options["recoater"]["temp"] = config["recoater"]["temp"]
+    options["recoater"]["valid_diff"] = config["recoater"]["valid_diff"]
+
     printer = Printer(teensy , projector , options)
 
     user_Continue("Continue to homing?")
@@ -83,7 +90,10 @@ def run(args , config):
         except Exception as e:
             print("Error moving " + response + " mm. Error is: " + str(e))
 
+    user_Continue("Start print of: " + str(file) + " ?")
 
+    printer.start_Heaters()
+    print(printer.check_Heaters())
 
 
     reader = CLI_Input_Reader()
