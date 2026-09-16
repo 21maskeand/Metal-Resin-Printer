@@ -32,6 +32,12 @@ static void handle_Command(char *command)
     }
   }
 
+  else if ((command[0] == 'M') & (command[1] == 'T'))
+  {
+    int stepper_id = atoi(command + 2);
+    move_To_Top(stepper_id);
+  }
+
   else if (command[0] == 'H')
   {
     int stepper_id = atoi(command + 1);

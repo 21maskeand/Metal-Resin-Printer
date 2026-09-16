@@ -14,7 +14,7 @@ constexpr Settings default_settings =
   .max_speeds = {2.5 , 2.5 , 10} , 
   .accelerations = {5 , 5 , 5} , 
   .microstepping_mode = 5 , 
-  .homing_offset_dists = {2.8 , 2.5 , 3}
+  .homing_offset_dists = {.3 , 2.5 , 3}
 };
 
 extern Settings settings;

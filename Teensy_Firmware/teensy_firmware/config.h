@@ -24,8 +24,8 @@ constexpr int step_pins[3] = {19 , 17 , 15}; // 19 17 15
 constexpr int dir_pins[3] = {18 , 16 , 14};
 constexpr int leads[3] = {4 , 4 , 8};                     // mm/rot or whatever other unit per rotation
 constexpr int steps_per_rotation[3] = {200 , 200 , 200};  // steps/rot (full steps)
-constexpr int min_travel[3] = {-185 , -185 , -2};         // mm minimum from being zeroed
-constexpr int max_travel[3] = {1 , 1 , 200};              // mm maximum from being zeroed
+constexpr float min_travel[3] = {-1 , -185 , -2};         // mm minimum from being zeroed
+constexpr float max_travel[3] = {185 , 1 , 200};              // mm maximum from being zeroed
 constexpr int min_pulse_width = 5;                        // us minimum pulse witdth that the teensy can send to the drv8825
 
 
@@ -34,9 +34,9 @@ constexpr int min_pulse_width = 5;                        // us minimum pulse wi
 // Reservoir: 0 , Build: 1 , Recoater: 2
 constexpr int switch_pins[3] = {1 , 7 , 20}; // 1 7 20
 constexpr bool normally_open[3] = {false , false , true};
-constexpr float homing_fast_speed_fracs[3] = {1 , 1 , -0.5};
-constexpr float homing_slow_speed_fracs[3] = {.1 , .1 , -.1};
-constexpr float backoff_dist[3] = {-4 , -4 , 4};
+constexpr float homing_fast_speed_fracs[3] = {-1 , 1 , -1};
+constexpr float homing_slow_speed_fracs[3] = {-.1 , .1 , -.1};
+constexpr float backoff_dist[3] = {4 , -4 , 4};
 
 
 // TEMPERATURE PINS AND CONFIGURATION

@@ -191,6 +191,12 @@ void home_Stepper(int id)
   homing_phase[id] = FAST;
 }
 
+void move_To_Top(int id)
+{
+  if (id < 0 || id >= num_axes) return;
+  axes[id].moveToDistance(max_travel[id]);
+}
+
 
 
 
