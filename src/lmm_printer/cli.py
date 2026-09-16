@@ -60,8 +60,28 @@ def run(args , config):
     printer = Printer(teensy , projector , options)
 
     user_Continue("Continue to homing?")
-    printer.home_Axes()
+    
+    response = input("Is everything already homed? y for yes, Enter elsewise. ").strip().lower()
+    if response != "y":
+        printer.home_Axes()
+    
 
+    response = input("Are you loading new slurry? y for yes, Enter elsewise. ")
+    if response.strip().lower() == "y":
+        printer.move_Axis_To_Top(0)
+        user_Continue("Done loading slurry?")
+    
+    print("Adjust the reservoir until the slurry block is flush with the material plate.")
+    print("Enter the amount of mm you want the reservoir to move up or down. Press enter once finished. ")
+    while True:
+        response = input("").strip()
+        if response == "":
+            break
+        try:
+            move = float(response)
+            printer.move_Axis_Relative(0 , move)
+        except Exception as e:
+            print("Error moving " + response + " mm. Error is: " + str(e))
 
 
 

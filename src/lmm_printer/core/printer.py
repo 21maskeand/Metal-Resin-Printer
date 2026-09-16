@@ -25,6 +25,20 @@ class Printer:
             for i in ids:
                 self.home_Axis(i)
 
+    def move_Axis_Relative(self , axis_id , move , wait = True):
+        command = "MR" + str(axis_id) + " " + str(move)
+        self.teensy.send_Command(command)
+        self.listening_for.append("M" + str(axis_id))
+        if wait:
+            self.wait_For_Response()
+
+    def move_Axis_To_Top(self , axis_id , wait = True):
+        command = "MT" + str(axis_id)
+        self.teensy.send_Command(command)
+        self.listening_for.append("M" + str(axis_id))
+        if wait:
+            self.wait_For_Response()
+
     def get_Temp(self , probe_id):
         command = "RT" + str(probe_id)
         self.teensy.send_Command(command)
