@@ -16,3 +16,6 @@ chamber:
 recoater:
   temp: 23
   valid_diff: 5
+
+reservoir:
+  extrude_multiple: 1.1

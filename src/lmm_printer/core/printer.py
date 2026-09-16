@@ -32,6 +32,13 @@ class Printer:
         if wait:
             self.wait_For_Response()
 
+    def move_Axis_Absolute(self , axis_id , move , wait = True):
+        command = "MA" + str(axis_id) + " " + str(move)
+        self.teensy.send_Command(command)
+        self.listening_for.append("M" + str(axis_id))
+        if wait:
+            self.wait_For_Response()
+
     def move_Axis_To_Top(self , axis_id , wait = True):
         command = "MT" + str(axis_id)
         self.teensy.send_Command(command)
@@ -77,6 +84,30 @@ class Printer:
             return True
         else:
             return False
+
+    def do_Layer(next_image):
+        while True:
+            if self.check_Heaters():
+                break
+
+        self.move_Axis_Relative(0 ,-options["reservoir"]["extrude_multiple"] * options["layer_thickness"])
+        self.move_Axis_Relative(1 , options["layer_thickness"])
+
+        self.move_Axis_To_Top(2)
+
+        self.projector.swap_buffer()
+        start_time = time.monotonic()
+        self.projector.expose_pattern(exposed_frames = 60 * options["exposure_time"])
+        self.projector.send_pixeldata_to_buffer(next_image)
+        while True:
+            if time.monotonic() - start_time > options["exposure_time"]:
+                break
+
+        self.move_Axis_Relative(0 , -options["layer_thickness"])
+        self.move_Axis_Relative(1 , -options["layer_thickness"])
+        self.move_Axis_Absolute(2 , 0)
+        self.move_Axis_Relative(0 , options["layer_thickness"])
+        self.move_Axis_Relative(1 , options["layer_thickness"])
 
 
     def wait_For_Response(self , timeout = 60*2):

@@ -63,6 +63,8 @@ def run(args , config):
     options["recoater"] = {}
     options["recoater"]["temp"] = config["recoater"]["temp"]
     options["recoater"]["valid_diff"] = config["recoater"]["valid_diff"]
+    options["reservoir"] = {}
+    options["reservoir"]["extrude_multiple"] = config["reservoir"]["extrude_multiple"]
 
     printer = Printer(teensy , projector , options)
 
@@ -93,7 +95,21 @@ def run(args , config):
     user_Continue("Start print of: " + str(file) + " ?")
 
     printer.start_Heaters()
-    print(printer.check_Heaters())
+    
+    for i in range(1 , num_layers + 1):
+        with Print_File(file) as print_file:
+            if i == num_layers:
+                next_image = None
+            else:
+                next_image = print_file.get_Image(i + 1).value
+            
+        if i == 1:
+            this_image = print_file.get_Image(i).value
+            printer.projector.send_pixeldata_to_buffer(this_image)
+
+        printer.do_Layer(next_image)
+        cli_Log("Layer " + str(i) + " done.")
+
 
 
     reader = CLI_Input_Reader()
