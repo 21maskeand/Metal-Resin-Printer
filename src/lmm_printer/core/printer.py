@@ -46,17 +46,17 @@ class Printer:
         if wait:
             self.wait_For_Response()
 
-    def get_Axis_Position(self , axis_id , wait = True):
+    def get_Axis_Position(self , axis_id):
         command = "GP" + str(probe_id)
+        self.teensy.send_Command(command)
         self.teensy.listening_for.append(command)
-        if wait:
-            self.wait_For_Response()
+        response = self.wait_For_Response()[0]
+        pos = float(response.split()[-1])
+        return pos
 
     def set_Axis_Position(self , axis_id , position , wait = True):
         command = "SP" + str(probe_id) + " " + str(position)
-        self.teensy.listening_for.append(command)
-        if wait:
-            self.wait_For_Response()
+        self.teensy.send_Command(command)
 
     def get_Temp(self , probe_id):
         command = "GT" + str(probe_id)
@@ -138,3 +138,15 @@ class Printer:
                     return_list.append(response)
             time.sleep(.005)
         return return_list
+
+    def return_Current_State(self):
+        pos = []
+        for i in range(3):
+            pos.append(self.get_Axis_Position(i))
+
+        state = {"pos": pos}
+        return state
+
+    def load_State(self , state):
+        for i in range(3):
+            self.set_Axis_Position(i , state["pos"][i])

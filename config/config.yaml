@@ -19,3 +19,7 @@ recoater:
 
 reservoir:
   extrude_multiple: 1.1
+
+files:
+  app_name: metal_resin_printer
+  state_file_name: state_file

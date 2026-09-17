@@ -1,4 +1,4 @@
-import json
+import json , os , tempfile
 import subprocess
 from pathlib import Path
 from lmm_printer.core.types import Result , State
