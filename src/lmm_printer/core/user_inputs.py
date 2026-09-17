@@ -3,15 +3,18 @@ import threading
 import queue
 from lmm_printer.core.logs import cli_Log
 
-class CLI_Input_Reader:
+class CLI_Input_Handler:
     def __init__(self):
         self.input_queue = queue.Queue()
+        self._stop = threading.Event()
+        print("Enter h at any time for a list of commands. ")
 
     def _reader(self):
-        for line in sys.stdin:
-            self.input_queue.put(line.rstrip("\n"))
+        while not self._stop.is_set():
+            for line in sys.stdin:
+                self.input_queue.put(line.rstrip("\n").strip().lower())
 
-    def get_Input(self):
+    def get_Inputs(self):
         lines = []
         while True:
             try:
@@ -21,28 +24,53 @@ class CLI_Input_Reader:
         return lines
 
     def clear(self):
-        self.get_Input()
+        self.get_Inputs()
+
+    def dispatch(self , inp , printer):
+        if inp == "h":
+            print("")
+            print("h: Prints this message.")
+            print("p: Pauses the printer.")
+            print("q: Safely quits the process.")
+            print("Note - neither pausing nor quitting will stop axes from completing their current move.")
+            print("")
+
+        elif inp == "p":
+            print("Enter r to resume.")
+            while True:
+                response = input("").strip().lower()
+                if response == "r":
+                    break
+
+        elif inp == "q":
+            printer.safe_Shutdown()
+            raise SystemExit(1)
+
+    def handle(self , printer):
+        inputs = self.get_Inputs()
+        for inp in inputs:
+            self.dispatch(inp , printer)
 
     def start_Thread(self):
-        threading.Thread(target=self._reader , daemon = True).start()
+        if getattr(self , '_thread' , None) and self._thread.is_alive():
+            return
+        self._stop.clear()
+        self._thread = threading.Thread(target=self._reader , daemon = True)
+        self._thread.start()
 
-def _flush_stdin():
-    try:
-        import msvcrt
-        while msvcrt.kbhit():
-            msvcrt.getch()
-    except ImportError:
-        import termios
-        termios.tcflush(sys.stdin , termios.TCIFLUSH)
+    def stop_Thread(self):
+        self._stop.set()
+        self._thread.join()
 
-def user_Continue(message):
+def user_Continue(message , printer = None):
     print("")
     print(message)
-    _flush_stdin() # Doesn't really do anything, was here to fix double enter bug, but still needs fixed
     response = input("Press Enter to continue, enter anything else to quit. ")
     if response != "":
         cli_Log("Exiting process.")
-        raise SystemExit()
+        if printer is not None:
+            printer.safe_Shutdown()
+        raise SystemExit(1)
     print("")
     print("Successfully continuing.")
     print("")

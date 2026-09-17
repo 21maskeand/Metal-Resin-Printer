@@ -16,6 +16,7 @@ chamber:
 recoater:
   temp: 23
   valid_diff: 5
+  vertical_pullback: 2
 
 reservoir:
   extrude_multiple: 1.1

@@ -7,8 +7,8 @@ from lmm_printer.projector.establish import return_Projector
 from lmm_printer.core.files import return_RM_Drives , cli_Choose_File
 from lmm_printer.core.logs import cli_Log
 from lmm_printer.core.types import Print_File , State
-from lmm_printer.core.user_inputs import CLI_Input_Reader , user_Continue
-from lmm_printer.core.printer import Printer
+from lmm_printer.core.user_inputs import CLI_Input_Handler , user_Continue
+from lmm_printer.core.printer import Printer , cli_Preparation
 
 def build_Parser():
     parser = argparse.ArgumentParser(prog = "lmm_printer")
@@ -16,66 +16,7 @@ def build_Parser():
     parser.add_argument("-g" , "--gui" , action = "store_true" , help = "GUI Flag. Defaults to no GUI.")
     return parser
 
-def cli_Preparation(printer):
-    user_Continue("Continue to preparation?")
-    
-    print("Did any of the axes move since last shutdown?")
-    print("Was the last shutdown bad?")
-    print("Is this the first time running this machine?")
-    print("Would you like to home all axes regardless of saved positions?")
-    response = input("y for yes to any, n for no to all. ").strip().lower()
-    if response == "y":
-        user_Continue("Homing required. Continue to homing?")
-        printer.home_Axes()
-        printer.save_State()
-
-    state_result = printer.load_State()
-    cli_Log(state_result)
-    if state_result.state == State.ERROR:
-        raise SystemExit(1)
-
-    response = input("Would you like to home a specific axis? y for yes, n for no. ").strip().lower()
-    if response == "y":
-        print("Enter the axes you want to home one at a time and wait till they are done to continue. Press enter once finished. ")
-        while True:
-            response = input("").strip()
-            if response == "":
-                break
-            try:
-                axis_id = int(response)
-                if (axis_id < 0) or (axis_id >= 3):
-                    raise ValueError("Axis ID: " + str(axis_id) + " invalid.")
-                printer.home_Axis(axis_id)
-            except Exception as e:
-                print("Error homing axis " + response + ". Error is: " + str(e))
-
-    response = input("Is everything ready to go? y for yes, n for no. ").strip().lower()
-    if response != "y":
-        response = input("Are you loading new slurry? y for yes, n for no. ").strip().lower()
-        if response == "y":
-            user_Continue("Unload current slurry / bring the plate to top?")
-            printer.move_Axis_To_Top(0)
-            printer.save_State()
-            user_Continue("Done placing slurry on plate?")
-            
-        response = input("Is the slurry flush with the material plate? y for yes, n for no. ").strip().lower()
-        if response != "y":
-            print("Adjust the reservoir until the slurry block is flush with the material plate.")
-            print("Enter the amount of mm you want the reservoir to move up or down. Press enter once finished. ")
-            while True:
-                response = input("").strip()
-                if response == "":
-                    break
-                try:
-                    move = float(response)
-                    printer.move_Axis_Relative(0 , move)
-                    printer.save_State()
-                except Exception as e:
-                    print("Error moving " + response + " mm. Error is: " + str(e))
-
-    printer.save_State()
-
-def run(args , config):
+def cli_Run(args , config):
     teensy_result = return_Teensy_Serial(config["teensy"]["vid"] , config["teensy"]["baudrate"] , config["teensy"]["timeout"] , config["teensy"]["enable_fallback"])
     cli_Log(teensy_result)
     if teensy_result.state == State.ERROR:
@@ -121,6 +62,7 @@ def run(args , config):
     options["recoater"] = {}
     options["recoater"]["temp"] = config["recoater"]["temp"]
     options["recoater"]["valid_diff"] = config["recoater"]["valid_diff"]
+    options["recoater"]["vertical_pullback"] = config["recoater"]["vertical_pullback"]
     options["reservoir"] = {}
     options["reservoir"]["extrude_multiple"] = config["reservoir"]["extrude_multiple"]
     state_dir = user_state_path(config["files"]["app_name"] , ensure_exists = True)
@@ -132,9 +74,12 @@ def run(args , config):
 
     cli_Preparation(printer)
 
-    user_Continue("Start print of: " + str(file) + " ?")
+    user_Continue("Start print of: " + str(file) + " ?"  , printer = printer)
 
     printer.start_Heaters()
+
+    handler = CLI_Input_Handler()
+    handler.start_Thread()
     
     for i in range(1 , num_layers + 1):
         with Print_File(file) as print_file:
@@ -147,13 +92,12 @@ def run(args , config):
                 this_image = print_file.get_Image(i).value
                 printer.projector.send_pixeldata_to_buffer(this_image , 0 , 0)
 
-        printer.do_Current_Layer(next_image)
+        printer.do_Current_Layer(next_image , handler = handler)
         cli_Log("Layer " + str(i) + " done.")
 
 
 
-    reader = CLI_Input_Reader()
-    reader.start_Thread()
+
 
 
 
@@ -170,4 +114,4 @@ def main():
     if args.gui:
         print("No GUI yet.")
     else:
-        run(args , config)
+        cli_Run(args , config)

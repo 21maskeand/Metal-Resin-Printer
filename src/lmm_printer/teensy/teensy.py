@@ -45,3 +45,7 @@ class Teensy:
         command = command + "\n"
         command = command.encode()
         self.ser.write(command)
+
+    def shutdown(self):
+        self.stop_Thread()
+        self.ser.close()
