@@ -50,15 +50,15 @@ class Printer:
             self.wait_For_Response()
 
     def get_Axis_Position(self , axis_id):
-        command = "GP" + str(probe_id)
+        command = "GP" + str(axis_id)
         self.teensy.send_Command(command)
-        self.teensy.listening_for.append(command)
+        self.listening_for.append(command)
         response = self.wait_For_Response()[0]
         pos = float(response.split()[-1])
         return pos
 
     def set_Axis_Position(self , axis_id , position , wait = True):
-        command = "SP" + str(probe_id) + " " + str(position)
+        command = "SP" + str(axis_id) + " " + str(position)
         self.teensy.send_Command(command)
 
     def get_Temp(self , probe_id):
@@ -100,29 +100,31 @@ class Printer:
         else:
             return False
 
-    def do__Current_Layer(next_image):
+    def do_Current_Layer(self , next_image):
         while True:
             if self.check_Heaters():
                 break
 
-        self.move_Axis_Relative(0 ,-options["reservoir"]["extrude_multiple"] * options["layer_thickness"])
-        self.move_Axis_Relative(1 , options["layer_thickness"])
+        self.move_Axis_Relative(0 , self.options["reservoir"]["extrude_multiple"] * self.options["layer_thickness"])
+        self.move_Axis_Relative(1 ,-self.options["layer_thickness"])
 
         self.move_Axis_To_Top(2)
 
         self.projector.swap_buffer()
         start_time = time.monotonic()
-        self.projector.expose_pattern(exposed_frames = 60 * options["exposure_time"])
+        self.projector.expose_pattern(exposed_frames = int(60 * self.options["exposure_time"]))
         self.projector.send_pixeldata_to_buffer(next_image)
         while True:
-            if time.monotonic() - start_time > options["exposure_time"]:
+            if time.monotonic() - start_time > self.options["exposure_time"]:
                 break
 
-        self.move_Axis_Relative(0 , -options["layer_thickness"])
-        self.move_Axis_Relative(1 , -options["layer_thickness"])
+        self.move_Axis_Relative(0 , -self.options["layer_thickness"])
+        self.move_Axis_Relative(1 , -self.options["layer_thickness"])
         self.move_Axis_Absolute(2 , 0)
-        self.move_Axis_Relative(0 , options["layer_thickness"])
-        self.move_Axis_Relative(1 , options["layer_thickness"])
+        self.move_Axis_Relative(0 , self.options["layer_thickness"])
+        self.move_Axis_Relative(1 , self.options["layer_thickness"])
+
+        self.save_State()
 
 
     def wait_For_Response(self , timeout = 60*2):

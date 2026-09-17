@@ -47,7 +47,7 @@ class NanoDLP_File:
                 options = json.load(f)
             with self._zip.open("profile.json") as f:
                 profile = json.load(f)
-            options = {"exposure_time": profile["CureTime"] , "layer_thickness": options["Thickness"]}
+            options = {"exposure_time": profile["CureTime"] , "layer_thickness": options["Thickness"]*.001}
             return Result(value = options , state = State.SUCCESS , message = "Successfully loaded options.")
         except Exception as e:
             return Result(value = None , state = State.ERROR , message = "Couldn't open options.json. Error was: " + str(e))

@@ -1,6 +1,7 @@
 import sys
 import threading
 import queue
+from lmm_printer.core.logs import cli_Log
 
 class CLI_Input_Reader:
     def __init__(self):
@@ -38,7 +39,7 @@ def user_Continue(message):
     print("")
     print(message)
     _flush_stdin() # Doesn't really do anything, was here to fix double enter bug, but still needs fixed
-    response = input("Press Enter to continue, enter anything else to quit.")
+    response = input("Press Enter to continue, enter anything else to quit. ")
     if response != "":
         cli_Log("Exiting process.")
         raise SystemExit()

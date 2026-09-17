@@ -54,7 +54,7 @@ def cli_Choose_File(drives):
             print("File name invalid.")
             return cli_Choose_File(drives)
 
-def save_Dict(path , dict):
+def save_Dict(path , data):
     d = os.path.dirname(path)
     fd , temp = tempfile.mkstemp(dir = d)
     try:

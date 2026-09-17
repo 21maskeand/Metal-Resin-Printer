@@ -31,28 +31,49 @@ def cli_Preparation(printer):
 
     state_result = printer.load_State()
     cli_Log(state_result)
-    if state_result.state = State.ERROR:
+    if state_result.state == State.ERROR:
         raise SystemExit(1)
 
-    response = input("Are you loading new slurry? y for yes, n for no. ").strip().lower()
+    response = input("Would you like to home a specific axis? y for yes, n for no. ").strip().lower()
     if response == "y":
-        user_Continue("Unload current slurry / bring the plate to top?")
-        printer.move_Axis_To_Top(0)
-        user_Continue("Done placing slurry on plate?")
-
-        print("Adjust the reservoir until the slurry block is flush with the material plate.")
-        print("Enter the amount of mm you want the reservoir to move up or down. Press enter once finished. ")
+        print("Enter the axes you want to home one at a time and wait till they are done to continue. Press enter once finished. ")
         while True:
             response = input("").strip()
             if response == "":
                 break
             try:
-                move = float(response)
-                printer.move_Axis_Relative(0 , move)
+                axis_id = int(response)
+                if (axis_id < 0) or (axis_id >= 3):
+                    raise ValueError("Axis ID: " + str(axis_id) + " invalid.")
+                printer.home_Axis(axis_id)
             except Exception as e:
-                print("Error moving " + response + " mm. Error is: " + str(e))
+                print("Error homing axis " + response + ". Error is: " + str(e))
 
-    user_Continue("Start print of: " + str(file) + " ?")
+    response = input("Is everything ready to go? y for yes, n for no. ").strip().lower()
+    if response != "y":
+        response = input("Are you loading new slurry? y for yes, n for no. ").strip().lower()
+        if response == "y":
+            user_Continue("Unload current slurry / bring the plate to top?")
+            printer.move_Axis_To_Top(0)
+            printer.save_State()
+            user_Continue("Done placing slurry on plate?")
+            
+        response = input("Is the slurry flush with the material plate? y for yes, n for no. ").strip().lower()
+        if response != "y":
+            print("Adjust the reservoir until the slurry block is flush with the material plate.")
+            print("Enter the amount of mm you want the reservoir to move up or down. Press enter once finished. ")
+            while True:
+                response = input("").strip()
+                if response == "":
+                    break
+                try:
+                    move = float(response)
+                    printer.move_Axis_Relative(0 , move)
+                    printer.save_State()
+                except Exception as e:
+                    print("Error moving " + response + " mm. Error is: " + str(e))
+
+    printer.save_State()
 
 def run(args , config):
     teensy_result = return_Teensy_Serial(config["teensy"]["vid"] , config["teensy"]["baudrate"] , config["teensy"]["timeout"] , config["teensy"]["enable_fallback"])
@@ -102,7 +123,7 @@ def run(args , config):
     options["recoater"]["valid_diff"] = config["recoater"]["valid_diff"]
     options["reservoir"] = {}
     options["reservoir"]["extrude_multiple"] = config["reservoir"]["extrude_multiple"]
-    state_dir = user_state_dir(config["files"]["app_name"] , ensure_exists = True)
+    state_dir = user_state_path(config["files"]["app_name"] , ensure_exists = True)
     state_file = state_dir / (config["files"]["state_file_name"] + ".json")
     options["files"] = {}
     options["files"]["state_file"] = state_file
@@ -110,6 +131,8 @@ def run(args , config):
     printer = Printer(teensy , projector , options)
 
     cli_Preparation(printer)
+
+    user_Continue("Start print of: " + str(file) + " ?")
 
     printer.start_Heaters()
     
@@ -122,7 +145,7 @@ def run(args , config):
                 
             if i == 1:
                 this_image = print_file.get_Image(i).value
-                printer.projector.send_pixeldata_to_buffer(this_image)
+                printer.projector.send_pixeldata_to_buffer(this_image , 0 , 0)
 
         printer.do_Current_Layer(next_image)
         cli_Log("Layer " + str(i) + " done.")
