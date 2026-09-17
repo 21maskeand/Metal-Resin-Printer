@@ -30,12 +30,14 @@ static float max_speeds_steps[num_axes];
 static float fast_homing_speeds_steps[num_axes];
 static float slow_homing_speeds_steps[num_axes];
 
+static int microsteps;
+
 void steppers_Init()
 {
   // Initialize Axes
   for (int i = 0; i < num_axes; i++)
   {
-    int microsteps = microstepping_mode_to_steps[settings.microstepping_mode];
+    microsteps = microstepping_mode_to_steps[settings.microstepping_mode];
 
     max_speeds_steps[i] = settings.max_speeds[i] * steps_per_rotation[i] * microsteps / leads[i];
     fast_homing_speeds_steps[i] = homing_fast_speed_fracs[i] * max_speeds_steps[i];
@@ -195,6 +197,19 @@ void move_To_Top(int id)
 {
   if (id < 0 || id >= num_axes) return;
   axes[id].moveToDistance(max_travel[id]);
+}
+
+float get_Axis_Position(int id)
+{
+  if (id < 0 || id >= num_axes) return -100000;
+  return axes[id].getCurrentPositionDistance();
+}
+
+void set_Axis_Position(int id , float pos)
+{
+  if (id < 0 || id >= num_axes) return;
+  axes[id].setCurrentPosition(pos * steps_per_rotation[id] * microsteps / leads[id]);
+
 }
 
 

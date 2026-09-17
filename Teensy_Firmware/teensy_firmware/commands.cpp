@@ -38,6 +38,24 @@ static void handle_Command(char *command)
     move_To_Top(stepper_id);
   }
 
+  else if ((command[0] == 'G') & (command[1] == 'P'))
+  {
+    int stepper_id = atoi(command + 2);
+    float pos = get_Axis_Position(stepper_id);
+    Serial.print("GP"); Serial.print(stepper_id); Serial.print(" "); Serial.println(pos); 
+  }
+
+  else if ((command[0] == 'S') & (command[1] == 'P'))
+  {
+    int stepper_id = atoi(command + 2);
+    char *space = strchr(command , ' ');
+    if (space)
+    {
+      float pos = atof(space + 1);
+      set_Axis_Position(stepper_id , pos);
+    }
+  }
+
   else if (command[0] == 'H')
   {
     int stepper_id = atoi(command + 1);
@@ -56,11 +74,11 @@ static void handle_Command(char *command)
     }
   }
 
-  else if ((command[0] == 'R') && (command[1] == 'T'))
+  else if ((command[0] == 'G') && (command[1] == 'T'))
   {
     int probe_id = atoi(command + 2);
     float temp = return_Temp(probe_id);
-    Serial.print("RT"); Serial.print(probe_id); Serial.print(" "); Serial.println(temp);
+    Serial.print("GT"); Serial.print(probe_id); Serial.print(" "); Serial.println(temp);
   }
 
   else if (command[0] == 'E')
