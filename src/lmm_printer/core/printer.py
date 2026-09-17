@@ -1,4 +1,5 @@
 import time
+from lmm_printer.core.files import save_Dict , load_Dict
 
 class Printer:
     def __init__(self , teensy , projector , options):
@@ -17,13 +18,15 @@ class Printer:
         if wait:
             self.wait_For_Response()
 
-    def home_Axes(self , ids = None):
+    def home_Axes(self , ids = None , one_at_a_time = False):
         if ids is None:
             for i in range(3):
-                self.home_Axis(i)
+                self.home_Axis(i , one_at_a_time)
         else:
             for i in ids:
-                self.home_Axis(i)
+                self.home_Axis(i , one_at_a_time)
+        if not one_at_a_time:
+            self.wait_For_Response()
 
     def move_Axis_Relative(self , axis_id , move , wait = True):
         command = "MR" + str(axis_id) + " " + str(move)
@@ -147,6 +150,14 @@ class Printer:
         state = {"pos": pos}
         return state
 
-    def load_State(self , state):
+    def save_State(self):
+        state = self.return_Current_State()
+        save_Dict(self.options["files"]["state_file"] , state)
+
+    def load_State(self):
+        state_result = load_Dict(self.options["files"]["state_file"])
+        state = state_result.value
         for i in range(3):
             self.set_Axis_Position(i , state["pos"][i])
+
+        return state_result

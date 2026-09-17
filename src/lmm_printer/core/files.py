@@ -54,3 +54,20 @@ def cli_Choose_File(drives):
             print("File name invalid.")
             return cli_Choose_File(drives)
 
+def save_Dict(path , dict):
+    d = os.path.dirname(path)
+    fd , temp = tempfile.mkstemp(dir = d)
+    try:
+        with os.fdopen(fd , "w") as f:
+            json.dump(data , f)
+        os.replace(temp , path)
+    except Exception:
+        os.unlink(temp)
+        raise
+
+def load_Dict(path):
+    try:
+        with open(path) as f:
+            return Result(value = json.load(f) , state = State.SUCCESS , message = "Loaded dict from: " + str(path))
+    except Exception as e:
+        return Result(value = None , state = State.ERROR , message = "Error loading dict from: " + str(path) + " Error was: " + str(e))

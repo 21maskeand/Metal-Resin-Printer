@@ -1,5 +1,6 @@
 import argparse
 from time import sleep
+from platformdirs import user_state_path
 from lmm_printer.config import load_Config
 from lmm_printer.teensy.establish import return_Teensy_Serial
 from lmm_printer.projector.establish import return_Projector
@@ -15,7 +16,43 @@ def build_Parser():
     parser.add_argument("-g" , "--gui" , action = "store_true" , help = "GUI Flag. Defaults to no GUI.")
     return parser
 
+def cli_Preparation(printer):
+    user_Continue("Continue to preparation?")
+    
+    print("Did any of the axes move since last shutdown?")
+    print("Was the last shutdown bad?")
+    print("Is this the first time running this machine?")
+    print("Would you like to home all axes regardless of saved positions?")
+    response = input("y for yes to any, n for no to all. ").strip().lower()
+    if response == "y":
+        user_Continue("Homing required. Continue to homing?")
+        printer.home_Axes()
+        printer.save_State()
 
+    state_result = printer.load_State()
+    cli_Log(state_result)
+    if state_result.state = State.ERROR:
+        raise SystemExit(1)
+
+    response = input("Are you loading new slurry? y for yes, n for no. ").strip().lower()
+    if response == "y":
+        user_Continue("Unload current slurry / bring the plate to top?")
+        printer.move_Axis_To_Top(0)
+        user_Continue("Done placing slurry on plate?")
+
+        print("Adjust the reservoir until the slurry block is flush with the material plate.")
+        print("Enter the amount of mm you want the reservoir to move up or down. Press enter once finished. ")
+        while True:
+            response = input("").strip()
+            if response == "":
+                break
+            try:
+                move = float(response)
+                printer.move_Axis_Relative(0 , move)
+            except Exception as e:
+                print("Error moving " + response + " mm. Error is: " + str(e))
+
+    user_Continue("Start print of: " + str(file) + " ?")
 
 def run(args , config):
     teensy_result = return_Teensy_Serial(config["teensy"]["vid"] , config["teensy"]["baudrate"] , config["teensy"]["timeout"] , config["teensy"]["enable_fallback"])
@@ -65,34 +102,14 @@ def run(args , config):
     options["recoater"]["valid_diff"] = config["recoater"]["valid_diff"]
     options["reservoir"] = {}
     options["reservoir"]["extrude_multiple"] = config["reservoir"]["extrude_multiple"]
+    state_dir = user_state_dir(config["files"]["app_name"] , ensure_exists = True)
+    state_file = state_dir / (config["files"]["state_file_name"] + ".json")
+    options["files"] = {}
+    options["files"]["state_file"] = state_file
 
     printer = Printer(teensy , projector , options)
 
-    user_Continue("Continue to homing?")
-    
-    response = input("Is everything already homed? y for yes, Enter elsewise. ").strip().lower()
-    if response != "y":
-        printer.home_Axes()
-    
-
-    response = input("Are you loading new slurry? y for yes, Enter elsewise. ")
-    if response.strip().lower() == "y":
-        printer.move_Axis_To_Top(0)
-        user_Continue("Done loading slurry?")
-    
-    print("Adjust the reservoir until the slurry block is flush with the material plate.")
-    print("Enter the amount of mm you want the reservoir to move up or down. Press enter once finished. ")
-    while True:
-        response = input("").strip()
-        if response == "":
-            break
-        try:
-            move = float(response)
-            printer.move_Axis_Relative(0 , move)
-        except Exception as e:
-            print("Error moving " + response + " mm. Error is: " + str(e))
-
-    user_Continue("Start print of: " + str(file) + " ?")
+    cli_Preparation(printer)
 
     printer.start_Heaters()
     
@@ -114,6 +131,8 @@ def run(args , config):
 
     reader = CLI_Input_Reader()
     reader.start_Thread()
+
+
 
 
 
