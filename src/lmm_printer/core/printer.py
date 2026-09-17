@@ -46,8 +46,20 @@ class Printer:
         if wait:
             self.wait_For_Response()
 
+    def get_Axis_Position(self , axis_id , wait = True):
+        command = "GP" + str(probe_id)
+        self.teensy.listening_for.append(command)
+        if wait:
+            self.wait_For_Response()
+
+    def set_Axis_Position(self , axis_id , position , wait = True):
+        command = "SP" + str(probe_id) + " " + str(position)
+        self.teensy.listening_for.append(command)
+        if wait:
+            self.wait_For_Response()
+
     def get_Temp(self , probe_id):
-        command = "RT" + str(probe_id)
+        command = "GT" + str(probe_id)
         self.teensy.send_Command(command)
         self.listening_for.append(command)
         response = self.wait_For_Response()[0]
@@ -85,7 +97,7 @@ class Printer:
         else:
             return False
 
-    def do_Layer(next_image):
+    def do__Current_Layer(next_image):
         while True:
             if self.check_Heaters():
                 break

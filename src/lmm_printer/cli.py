@@ -102,12 +102,12 @@ def run(args , config):
                 next_image = None
             else:
                 next_image = print_file.get_Image(i + 1).value
-            
-        if i == 1:
-            this_image = print_file.get_Image(i).value
-            printer.projector.send_pixeldata_to_buffer(this_image)
+                
+            if i == 1:
+                this_image = print_file.get_Image(i).value
+                printer.projector.send_pixeldata_to_buffer(this_image)
 
-        printer.do_Layer(next_image)
+        printer.do_Current_Layer(next_image)
         cli_Log("Layer " + str(i) + " done.")
 
 
