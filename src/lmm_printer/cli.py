@@ -1,5 +1,5 @@
 import argparse
-from time import sleep
+from time import sleep , monotonic
 from platformdirs import user_state_path
 from lmm_printer.config import load_Config
 from lmm_printer.teensy.establish import return_Teensy_Serial
@@ -9,6 +9,7 @@ from lmm_printer.core.logs import cli_Log
 from lmm_printer.core.types import Print_File , State
 from lmm_printer.core.user_inputs import CLI_Input_Handler , user_Continue
 from lmm_printer.core.printer import Printer , cli_Preparation
+from lmm_printer.utils.vendored_handling import silence
 
 def build_Parser():
     parser = argparse.ArgumentParser(prog = "lmm_printer")
@@ -55,19 +56,9 @@ def cli_Run(args , config):
         raise SystemExit(1)
 
     options = options_result.value
-
-    options["chamber"] = {}
-    options["chamber"]["temp"] = config["chamber"]["temp"]
-    options["chamber"]["valid_diff"] = config["chamber"]["valid_diff"]
-    options["recoater"] = {}
-    options["recoater"]["temp"] = config["recoater"]["temp"]
-    options["recoater"]["valid_diff"] = config["recoater"]["valid_diff"]
-    options["recoater"]["vertical_pullback"] = config["recoater"]["vertical_pullback"]
-    options["reservoir"] = {}
-    options["reservoir"]["extrude_multiple"] = config["reservoir"]["extrude_multiple"]
+    options = options | config
     state_dir = user_state_path(config["files"]["app_name"] , ensure_exists = True)
     state_file = state_dir / (config["files"]["state_file_name"] + ".json")
-    options["files"] = {}
     options["files"]["state_file"] = state_file
 
     printer = Printer(teensy , projector , options)
@@ -90,10 +81,13 @@ def cli_Run(args , config):
                 
             if i == 1:
                 this_image = print_file.get_Image(i).value
-                printer.projector.send_pixeldata_to_buffer(this_image , 0 , 0)
+                with silence():
+                    printer.projector.send_pixeldata_to_buffer(this_image , 0 , 0)
 
+        start_time = monotonic()
         printer.do_Current_Layer(next_image , handler = handler)
-        cli_Log("Layer " + str(i) + " done.")
+        end_time = monotonic()
+        cli_Log("Layer " + str(i) + " done. Took: " + str(end_time - start_time) + " seconds.")
 
 
 

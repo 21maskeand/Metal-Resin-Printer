@@ -43,6 +43,7 @@ class CLI_Input_Handler:
                     break
 
         elif inp == "q":
+            print("Shutting down.")
             printer.safe_Shutdown()
             raise SystemExit(1)
 

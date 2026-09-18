@@ -4,6 +4,7 @@ from lmm_printer.core.files import save_Dict , load_Dict
 from lmm_printer.core.user_inputs import user_Continue
 from lmm_printer.core.logs import cli_Log
 from lmm_printer.core.types import State
+from lmm_printer.utils.vendored_handling import silence
 
 
 class Printer:
@@ -16,10 +17,11 @@ class Printer:
 
         self.listening_for = []
 
-    def home_Axis(self , axis_id , wait = True):
+    def home_Axis(self , axis_id , wait = True , listen = True):
         command = "H" + str(axis_id)
         self.teensy.send_Command(command)
-        self.listening_for.append(command)
+        if listen:
+            self.listening_for.append(command)
         if wait:
             self.wait_For_Response()
 
@@ -33,24 +35,27 @@ class Printer:
         if not one_at_a_time:
             self.wait_For_Response()
 
-    def move_Axis_Relative(self , axis_id , move , wait = True):
+    def move_Axis_Relative(self , axis_id , move , wait = True , listen = True):
         command = "MR" + str(axis_id) + " " + str(move)
         self.teensy.send_Command(command)
-        self.listening_for.append("M" + str(axis_id))
+        if listen:
+            self.listening_for.append("M" + str(axis_id))
         if wait:
             self.wait_For_Response()
 
-    def move_Axis_Absolute(self , axis_id , move , wait = True):
+    def move_Axis_Absolute(self , axis_id , move , wait = True , listen = True):
         command = "MA" + str(axis_id) + " " + str(move)
         self.teensy.send_Command(command)
-        self.listening_for.append("M" + str(axis_id))
+        if listen:
+            self.listening_for.append("M" + str(axis_id))
         if wait:
             self.wait_For_Response()
 
-    def move_Axis_To_Top(self , axis_id , wait = True):
+    def move_Axis_To_Top(self , axis_id , wait = True , listen = True):
         command = "MT" + str(axis_id)
         self.teensy.send_Command(command)
-        self.listening_for.append("M" + str(axis_id))
+        if listen:
+            self.listening_for.append("M" + str(axis_id))
         if wait:
             self.wait_For_Response()
 
@@ -62,7 +67,7 @@ class Printer:
         pos = float(response.split()[-1])
         return pos
 
-    def set_Axis_Position(self , axis_id , position , wait = True):
+    def set_Axis_Position(self , axis_id , position):
         command = "SP" + str(axis_id) + " " + str(position)
         self.teensy.send_Command(command)
 
@@ -111,6 +116,9 @@ class Printer:
                 handler.handle(self)
             if self.check_Heaters():
                 break
+                
+        if handler is not None:
+            handler.handle(self)
 
         self.move_Axis_Relative(0 , self.options["reservoir"]["extrude_multiple"] * self.options["layer_thickness"])
         self.move_Axis_Relative(1 ,-self.options["layer_thickness"])
@@ -119,25 +127,37 @@ class Printer:
         self.move_Axis_To_Top(2)
         self.save_State()
 
-        self.projector.swap_buffer()
-        start_time = time.monotonic()
-        self.projector.expose_pattern(exposed_frames = int(60 * self.options["exposure_time"]))
-        self.projector.send_pixeldata_to_buffer(next_image , 0 , 0)
+        self.move_Axis_Relative(0 , -self.options["recoater"]["vertical_pullback"] , wait = False)
+        self.move_Axis_Relative(1 , -self.options["recoater"]["vertical_pullback"] , wait = False)
+        self.wait_For_Response()
+        self.move_Axis_Absolute(2 , 0 , wait = False , listen = False)
+        while True:
+            recoater_pos = self.get_Axis_Position(2)
+            if recoater_pos < self.options["recoater"]["clear_pos"]:
+                break
+
+        self.move_Axis_Relative(1 , self.options["recoater"]["vertical_pullback"])
+        self.save_State()
+
+        with silence():
+            self.projector.swap_buffer()
+            exposure_start_time = time.monotonic()
+            self.projector.expose_pattern(exposed_frames = int(60 * self.options["exposure_time"]))
+            self.projector.send_pixeldata_to_buffer(next_image , 0 , 0)
+
         while True:
             if handler is not None:
                 handler.handle(self)
-            if time.monotonic() - start_time > self.options["exposure_time"]:
+            if time.monotonic() - exposure_start_time > self.options["exposure_time"]:
                 break
 
-        self.move_Axis_Relative(0 , -self.options["recoater"]["vertical_pullback"])
-        self.move_Axis_Relative(1 , -self.options["recoater"]["vertical_pullback"])
-        self.move_Axis_Absolute(2 , 0)
+        self.listening_for.append("M2")
+        self.wait_For_Response()
         self.move_Axis_Relative(0 , self.options["recoater"]["vertical_pullback"])
-        self.move_Axis_Relative(1 , self.options["recoater"]["vertical_pullback"])
 
         self.save_State()
 
-    def wait_For_Response(self , timeout = 60*2):
+    def wait_For_Response(self , timeout = 60):
         return_list = []
         start = time.monotonic()
         while len(self.listening_for) != 0:
@@ -176,12 +196,14 @@ class Printer:
         return state_result
 
     def safe_Shutdown(self):
-        self.projector.stop_exposure()
+        self.save_State(safe_shutdown = True)
+        with silence():
+            self.projector.stop_exposure()
         self.set_Heater(0 , 0)
         self.set_Heater(1 , 0)
         self.teensy.shutdown()
         GPIO.cleanup()
-        self.save_State(safe_shutdown = True)
+        
 
 
 
