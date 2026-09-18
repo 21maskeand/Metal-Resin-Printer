@@ -2,6 +2,7 @@
 #include "commands.h"
 #include "steppers.h"
 #include "heaters.h"
+#include "settings.h"
 #include <Arduino.h>
 
 static char buffer[32];
@@ -54,6 +55,58 @@ static void handle_Command(char *command)
       float pos = atof(space + 1);
       set_Axis_Position(stepper_id , pos);
     }
+  }
+
+  else if ((command[0] == 'S') & (command[1] == 'M') & (command[2] == 'S'))
+  {
+    int axis_id = atoi(command + 3);
+    char *space = strchr(command , ' ');
+    if (space)
+    {
+      float speed = atof(space + 1);
+      set_Max_Speed(axis_id , speed);
+    }
+    steppers_Init();
+  }
+
+  else if ((command[0] == 'S') & (command[1] == 'A'))
+  {
+    int axis_id = atoi(command + 2);
+    char *space = strchr(command , ' ');
+    if (space)
+    {
+      float acc = atof(space + 1);
+      set_Acceleration(axis_id , acc);
+    }
+  }
+
+  else if ((command[0] == 'S') & (command[1] == 'M') & (command[2] == 'M'))
+  {
+    char *space = strchr(command , ' ');
+    if (space)
+    {
+      int mode = atof(space + 1);
+      set_Microstepping_Mode(mode);
+    }
+    steppers_Init();
+  }
+
+  else if ((command[0] == 'S') & (command[1] == 'O') & (command[2] == 'D'))
+  {
+    int axis_id = atoi(command + 3);
+    char *space = strchr(command , ' ');
+    if (space)
+    {
+      float dist = atof(space + 1);
+      set_Offset_Distance(axis_id , dist);
+    }
+    steppers_Init();
+  }
+
+  else if ((command[0] == 'R') & (command[1] == 'D') & (command[2] == 'S'))
+  {
+    reset_Default_Settings();
+    steppers_Init();
   }
 
   else if (command[0] == 'H')
