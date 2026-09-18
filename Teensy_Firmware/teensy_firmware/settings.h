@@ -18,7 +18,7 @@ struct Settings
 constexpr Settings default_settings = 
 {
   .max_speeds = {10 , 10 , 40} , 
-  .accelerations = {5 , 5 , 5} , 
+  .accelerations = {5 , 5 , 20} , 
   .microstepping_mode = 5 , 
   .homing_offset_dists = {.3 , 2.5 , 3}
 };
