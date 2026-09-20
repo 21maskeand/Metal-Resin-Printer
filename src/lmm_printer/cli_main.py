@@ -1,7 +1,5 @@
-import argparse
 from time import sleep , monotonic
 from platformdirs import user_state_path
-from lmm_printer.config import load_Config
 from lmm_printer.teensy.establish import return_Teensy_Serial
 from lmm_printer.projector.establish import return_Projector
 from lmm_printer.core.files import return_RM_Drives , cli_Choose_File
@@ -10,12 +8,6 @@ from lmm_printer.core.types import Print_File , State
 from lmm_printer.core.user_inputs import CLI_Input_Handler , user_Continue
 from lmm_printer.core.printer import Printer , cli_Preparation
 from lmm_printer.utils.vendored_handling import silence
-
-def build_Parser():
-    parser = argparse.ArgumentParser(prog = "lmm_printer")
-    parser.add_argument("-c" , "--config" , default = "config.yaml" , help = "The name of the yaml format file to use in the config folder. Include extenstion.")
-    parser.add_argument("-g" , "--gui" , action = "store_true" , help = "GUI Flag. Defaults to no GUI.")
-    return parser
 
 def cli_Run(args , config):
     teensy_result = return_Teensy_Serial(config["teensy"]["vid"] , config["teensy"]["baudrate"] , config["teensy"]["timeout"] , config["teensy"]["enable_fallback"])
@@ -90,22 +82,5 @@ def cli_Run(args , config):
         cli_Log("Layer " + str(i) + " done. Took: " + str(end_time - start_time) + " seconds.")
 
 
-
-
-
-
-
-
-
-        
-
-
-    
-
-def main():
-    args = build_Parser().parse_args()
-    config = load_Config(args.config)
-    if args.gui:
-        print("No GUI yet.")
-    else:
-        cli_Run(args , config)
+def main(args , config):
+    cli_Run(args , config)
