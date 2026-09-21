@@ -53,7 +53,8 @@ def cli_Run(args , config):
     state_file = state_dir / (config["files"]["state_file_name"] + ".json")
     options["files"]["state_file"] = state_file
 
-    printer = Printer(teensy , projector , options)
+    printer = Printer(teensy , projector)
+    printer.load_Options(options)
 
     cli_Preparation(printer)
 

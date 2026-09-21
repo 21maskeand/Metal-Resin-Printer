@@ -1,7 +1,8 @@
 import json , os , tempfile
+from dataclasses import fields , asdict
 import subprocess
 from pathlib import Path
-from lmm_printer.core.types import Result , State
+from lmm_printer.core.types import Result , State , Printer_State
 
 def return_RM_Drives():
     out = subprocess.check_output(["lsblk" , "-J" , "-o" , "NAME,TYPE,RM,FSTYPE,MOUNTPOINT,PATH"] , text=True)
@@ -25,6 +26,17 @@ def return_RM_Drives():
     else:
         drives = Result(value = drives , state = State.SUCCESS , message = "Found drives: " + ", ".join(mnt for dev , mnt in drives))
     return drives
+
+def get_Files(drives):
+    file_names = []
+    file_mnts = []
+    for dev , mnt in drives:
+        root = Path(mnt)
+        for file in root.iterdir():
+            file_names.append(file.name)
+            file_mnts.append(mnt)
+
+    return file_names , file_mnts
 
 def cli_Choose_File(drives):
     print("")
@@ -68,6 +80,18 @@ def save_Dict(path , data):
 def load_Dict(path):
     try:
         with open(path) as f:
-            return Result(value = json.load(f) , state = State.SUCCESS , message = "Loaded dict from: " + str(path))
-    except Exception as e:
-        return Result(value = None , state = State.ERROR , message = "Error loading dict from: " + str(path) + " Error was: " + str(e))
+            return json.load(f)
+    except Exception:
+        raise
+
+def save_Printer_State(path , data):
+    save_Dict(path , asdict(data))
+
+def load_Printer_State(path):
+    if not path.exists():
+        state = Printer_State()
+        save_Printer_State(path , state)
+        return state
+    state_dict = load_Dict(path)
+    known = {f.name for f in fields(Printer_State)}
+    return Printer_State(**{k: v for k , v in state_dict.items() if k in known})

@@ -1,20 +1,18 @@
 import time
 import RPi.GPIO as GPIO
-from lmm_printer.core.files import save_Dict , load_Dict
+from lmm_printer.core.files import save_Printer_State , load_Printer_State
 from lmm_printer.core.user_inputs import user_Continue
 from lmm_printer.core.logs import cli_Log
-from lmm_printer.core.types import State
+from lmm_printer.core.types import State , Printer_State
 from lmm_printer.utils.vendored_handling import silence
 
 
 class Printer:
-    def __init__(self , teensy , projector , options):
+    def __init__(self , teensy , projector , config):
         self.teensy = teensy
         self.projector = projector
-        self.options = options
-
+        self.config = config
         self.teensy.start_Thread()
-
         self.listening_for = []
 
     def home_Axis(self , axis_id , wait = True , listen = True):
@@ -28,10 +26,10 @@ class Printer:
     def home_Axes(self , ids = None , one_at_a_time = False):
         if ids is None:
             for i in range(3):
-                self.home_Axis(i , one_at_a_time)
+                self.home_Axis(i , wait = one_at_a_time)
         else:
             for i in ids:
-                self.home_Axis(i , one_at_a_time)
+                self.home_Axis(i , wait = one_at_a_time)
         if not one_at_a_time:
             self.wait_For_Response()
 
@@ -84,11 +82,11 @@ class Printer:
         self.teensy.send_Command(command)
     
     def start_Heaters(self):
-        self.set_Heater(0 , self.options["chamber"]["temp"])
-        self.set_chamber_temp = self.options["chamber"]["temp"]
+        self.set_Heater(0 , self.config["chamber"]["temp"])
+        self.set_chamber_temp = self.config["chamber"]["temp"]
 
-        self.set_Heater(1 , self.options["recoater"]["temp"])
-        self.set_recoater_temp = self.options["recoater"]["temp"]
+        self.set_Heater(1 , self.config["recoater"]["temp"])
+        self.set_recoater_temp = self.config["recoater"]["temp"]
 
     def check_Heaters(self):
         chamber_good = False
@@ -97,12 +95,12 @@ class Printer:
         chamber_temp = self.get_Temp(0)
         recoater_temp = self.get_Temp(2)
 
-        if (self.set_chamber_temp != self.options["chamber"]["temp"]) or (self.set_recoater_temp != self.options["recoater"]["temp"]):
+        if (self.set_chamber_temp != self.config["chamber"]["temp"]) or (self.set_recoater_temp != self.config["recoater"]["temp"]):
             self.start_Heaters()
         
-        if self.set_chamber_temp - self.options["chamber"]["valid_diff"] <= chamber_temp <= self.set_chamber_temp + self.options["chamber"]["valid_diff"]:
+        if self.set_chamber_temp - self.config["chamber"]["valid_diff"] <= chamber_temp <= self.set_chamber_temp + self.config["chamber"]["valid_diff"]:
             chamber_good = True
-        if self.set_recoater_temp - self.options["recoater"]["valid_diff"] <= recoater_temp <= self.set_recoater_temp + self.options["recoater"]["valid_diff"]:
+        if self.set_recoater_temp - self.config["recoater"]["valid_diff"] <= recoater_temp <= self.set_recoater_temp + self.config["recoater"]["valid_diff"]:
             recoater_good = True
 
         if chamber_good and recoater_good:
@@ -110,50 +108,39 @@ class Printer:
         else:
             return False
 
-    def do_Current_Layer(self , next_image , handler = None):
-        while True:
-            if handler is not None:
-                handler.handle(self)
-            if self.check_Heaters():
-                break
-                
-        if handler is not None:
-            handler.handle(self)
-
-        self.move_Axis_Relative(0 , self.options["reservoir"]["extrude_multiple"] * self.options["layer_thickness"])
-        self.move_Axis_Relative(1 ,-self.options["layer_thickness"])
+    def do_Current_Layer(self , next_image , options):                
+        self.move_Axis_Relative(0 , self.config["reservoir"]["extrude_multiple"] * options["layer_thickness"])
+        self.move_Axis_Relative(1 , -options["layer_thickness"])
         self.save_State()
 
         self.move_Axis_To_Top(2)
         self.save_State()
 
-        self.move_Axis_Relative(0 , -self.options["recoater"]["vertical_pullback"] , wait = False)
-        self.move_Axis_Relative(1 , -self.options["recoater"]["vertical_pullback"] , wait = False)
+        self.move_Axis_Relative(0 , -self.config["recoater"]["vertical_pullback"] , wait = False)
+        self.move_Axis_Relative(1 , -self.config["recoater"]["vertical_pullback"] , wait = False)
         self.wait_For_Response()
         self.move_Axis_Absolute(2 , 0 , wait = False , listen = False)
         while True:
             recoater_pos = self.get_Axis_Position(2)
-            if recoater_pos < self.options["recoater"]["clear_pos"]:
+            if recoater_pos < self.config["recoater"]["clear_pos"]:
                 break
 
-        self.move_Axis_Relative(1 , self.options["recoater"]["vertical_pullback"])
+        self.move_Axis_Relative(1 , self.config["recoater"]["vertical_pullback"])
         self.save_State()
 
         with silence():
             self.projector.swap_buffer()
             exposure_start_time = time.monotonic()
-            self.projector.expose_pattern(exposed_frames = int(60 * self.options["exposure_time"]))
+            self.projector.expose_pattern(exposed_frames = int(60 * options["exposure_time"]))
             self.projector.send_pixeldata_to_buffer(next_image , 0 , 0)
 
         while True:
-            if handler is not None:
-                handler.handle(self)
-            if time.monotonic() - exposure_start_time > self.options["exposure_time"]:
+            if time.monotonic() - exposure_start_time > options["exposure_time"]:
                 break
 
         self.listening_for.append("M2")
         self.wait_For_Response()
-        self.move_Axis_Relative(0 , self.options["recoater"]["vertical_pullback"])
+        self.move_Axis_Relative(0 , self.config["recoater"]["vertical_pullback"])
 
         self.save_State()
 
@@ -179,21 +166,21 @@ class Printer:
         for i in range(3):
             pos.append(self.get_Axis_Position(i))
 
-        state = {"pos": pos}
+        state = Printer_State()
+        state.pos = pos
         return state
 
     def save_State(self , safe_shutdown = False):
         state = self.return_Current_State()
-        state["safe_shutdown"] = safe_shutdown
-        save_Dict(self.options["files"]["state_file"] , state)
+        state.safe_shutdown = safe_shutdown
+        save_Printer_State(self.config["files"]["state_file"] , state)
 
     def load_State(self):
-        state_result = load_Dict(self.options["files"]["state_file"])
-        state = state_result.value
+        state = load_Printer_State(self.config["files"]["state_file"])
         for i in range(3):
-            self.set_Axis_Position(i , state["pos"][i])
+            self.set_Axis_Position(i , state.pos[i])
 
-        return state_result
+        return state
 
     def safe_Shutdown(self):
         self.save_State(safe_shutdown = True)
@@ -204,8 +191,6 @@ class Printer:
         self.teensy.shutdown()
         GPIO.cleanup()
         
-
-
 
 def cli_Preparation(printer):
     user_Continue("Continue to preparation?" , printer = printer)

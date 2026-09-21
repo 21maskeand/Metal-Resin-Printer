@@ -1,5 +1,5 @@
 import numpy as np
-from dataclasses import dataclass
+from dataclasses import dataclass , field
 from enum import Enum
 from typing import Generic , TypeVar
 import zipfile
@@ -21,6 +21,11 @@ class Result(Generic[T]):
 
     def is_good():
         return self.state is State.SUCCESS
+
+@dataclass
+class Printer_State:
+    pos: list = field(default_factory=lambda:[0 , 0 , 0])
+    safe_shutdown: bool = False
 
 class NanoDLP_File:
     def __init__(self , path):
