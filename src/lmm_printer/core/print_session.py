@@ -96,9 +96,8 @@ class Print_Session:
         if not self.file_good:
             self.output_handler.handle("You must load a file before printing. ")
             return
-
-        self.print_input_handler.start_Thread()
         
+        self.print_input_handler.suggestion()
         self.printer.start_Heaters()
         for i in range(1 , self.num_layers + 1):
             while True:
@@ -107,7 +106,6 @@ class Print_Session:
                     break
             self.print_input_handler.handle(self)
             if self.stop_print:
-                self.print_input_handler.stop_Thread()
                 self.stop_print = False
                 return
             with Print_File(self.file) as print_file:
@@ -125,8 +123,6 @@ class Print_Session:
             self.printer.do_Current_Layer(next_image , self.options)
             end_time = monotonic()
             self.output_handler.handle("Layer " + str(i) + " done. Took: " + str(end_time - start_time) + " seconds.")
-
-        self.print_input_handler.stop_Thread()
         
     def go(self):
         self.load_Hardware()

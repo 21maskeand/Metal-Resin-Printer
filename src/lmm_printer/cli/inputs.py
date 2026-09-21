@@ -1,6 +1,4 @@
-import sys
-import threading
-import queue
+import sys , select
 from lmm_printer.core.types import Result , State
 
 class Input_Handler:
@@ -201,26 +199,8 @@ class Input_Handler:
 
 
 class Print_Input_Handler:
-    def __init__(self):
-        self.input_queue = queue.Queue()
-        self._stop = threading.Event()
-
     def suggestion(self):
         print("Enter h at any time for a list of commands. ")
-
-    def _reader(self):
-        while not self._stop.is_set():
-            for line in sys.stdin:
-                self.input_queue.put(line.rstrip("\n").strip().lower())
-
-    def get_Inputs(self):
-        lines = []
-        while True:
-            try:
-                lines.append(self.input_queue.get_nowait())
-            except queue.Empty:
-                break
-        return lines
 
     def clear(self):
         self.get_Inputs()
@@ -235,12 +215,10 @@ class Print_Input_Handler:
             print("")
 
         elif inp == "p":
-            self.stop_Thread()
             print("Enter r to resume.")
             while True:
                 response = input("").strip().lower()
                 if response == "r":
-                    self.start_Thread()
                     break
                     
         elif inp == "q":
@@ -253,19 +231,10 @@ class Print_Input_Handler:
             print_session.printer.set_Heater(1 , 0)
             print_session.stop_print = True
             
+    def line_Ready(self):
+        return select.select([sys.stdin] , [] , [] , 0)[0] != []
 
     def handle(self , print_session):
-        inputs = self.get_Inputs()
-        for inp in inputs:
-            self.dispatch(inp , print_session)
-
-    def start_Thread(self):
-        if getattr(self , '_thread' , None) and self._thread.is_alive():
-            return
-        self._stop.clear()
-        self._thread = threading.Thread(target=self._reader , daemon = True)
-        self._thread.start()
-
-    def stop_Thread(self):
-        self._stop.set()
-        self._thread.join(timeout = 0.2)
+        while self.line_Ready():
+            cmd = sys.stdin.readline().strip().lower()
+            self.dispatch(cmd , print_session)
