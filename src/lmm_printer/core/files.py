@@ -10,7 +10,9 @@ def return_RM_Drives():
 
     Returns:
         Result: A dataclass decribing the outcomes with fields:
-            value: The 
+            value: The value of the result, In this case None or a list of the mount paths of the drives.
+            state (State): A State Enum of State.ERROR or State.SUCCESS depending on whether any drives were found.
+            message (str): A message to pass out of the function. 
     """
     out = subprocess.check_output(["lsblk" , "-J" , "-o" , "NAME,TYPE,RM,FSTYPE,MOUNTPOINT,PATH"] , text=True)
     tree = json.loads(out)
@@ -35,6 +37,17 @@ def return_RM_Drives():
     return drives
 
 def get_Files(drives):
+    """
+    Gets all of the files in a list of drives (mount paths).
+
+    Parameters:
+        drives (list): A list of paths to the mount points of loaded removable drives.
+
+    Returns:
+        file_names (list): A list of file names.
+        file_mnts (list): A list of mounts asscociated with the files of file_names.
+    """
+
     file_names = []
     file_mnts = []
     for dev , mnt in drives:
@@ -46,6 +59,14 @@ def get_Files(drives):
     return file_names , file_mnts
 
 def save_Dict(path , data):
+    """
+    Saves a dict to a path.
+
+    Parameters:
+        path (Path or str): The save path.
+        data (dict): The dict to be saved.
+    """
+
     d = os.path.dirname(path)
     fd , temp = tempfile.mkstemp(dir = d)
     try:
@@ -57,6 +78,16 @@ def save_Dict(path , data):
         raise
 
 def load_Dict(path):
+    """
+    Loads a dict from a path.
+
+    Parameters:
+        path (Path or str): The path to load from.
+
+    Returns:
+        dict: The dict saved at path.
+    """
+
     try:
         with open(path) as f:
             return json.load(f)
@@ -64,9 +95,27 @@ def load_Dict(path):
         raise
 
 def save_Printer_State(path , data):
+    """
+    Saves a Printer_State object as a dict.
+
+    Parameters:
+        path (Path or str): The path to save to.
+        data (Printer_State): The data to save.
+    """
+
     save_Dict(path , asdict(data))
 
 def load_Printer_State(path):
+    """
+    Loads a Printer_State object from path.
+
+    Parameters:
+        path (Path or str): The path to load from.
+
+    Returns:
+        Printer_State: The printer state loaded from path.
+    """
+
     if not path.exists():
         state = Printer_State()
         save_Printer_State(path , state)

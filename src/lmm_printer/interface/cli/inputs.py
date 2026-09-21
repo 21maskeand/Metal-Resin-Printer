@@ -1,7 +1,8 @@
 import sys , select
 from lmm_printer.core.types import Result , State
+from lmm_printer.interface.inputs import Generic_Input_Handler  , Generic_Print_Input_Handler
 
-class Input_Handler:
+class Input_Handler(Generic_Input_Handler):
     """
     This is the main CLI input handler.
     """
@@ -55,7 +56,33 @@ class Input_Handler:
             else:
                 print("Invalid entry. ")
 
-    def help(self):
+    def get_Do_Command(self , print_session):
+        """
+        Queries the user for a command and then does it.
+
+        Parameters:
+            print_session (Print_Session): The print session to act upon.
+        """
+
+        print("")
+        response = input("Enter Command: ").strip().lower()
+
+        if response == "help":
+            self._help()
+        elif response == "choose file":
+            self._choose_File(print_session)
+        elif response == "quit":
+            self._quit(print_session)
+        elif response == "home":
+            self._home(print_session)
+        elif response == "move":
+            self._move(print_session)
+        elif response == "get pos":
+            self._get_Pos(print_session)
+        elif response == "print":
+            print_session.print()
+
+    def _help(self):
         """
         Prints all of the commands.
         """
@@ -69,7 +96,7 @@ class Input_Handler:
         print("get pos: Gets the position of an axis. ")
         print("print: Prints selected file. ")
 
-    def choose_File(self , print_session):
+    def _choose_File(self , print_session):
         """
         Prints detected files and has the user choose one. 
         It then sends it to the print_session and has the print session load its attributes.
@@ -105,13 +132,13 @@ class Input_Handler:
                 file_result = Result(value = Path(mnt) / response , state = State.SUCCESS , message = "Successfully chose file: " + response + ", at mount: " + mnt + ".")
             else:
                 print("File name invalid.")
-                return self.choose_File(print_session)
+                return self._choose_File(print_session)
         
         print_session.output_handler.handle(file_result)
         print_session.file = file_result.value
         print_session.load_Print_File_Attributes()
 
-    def quit(self , print_session):
+    def _quit(self , print_session):
         """
         Safely shuts down the printer and stops print_session.go() by setting the should_go flag to False.
 
@@ -122,8 +149,10 @@ class Input_Handler:
         if print_session.hardware_good:
             print_session.printer.safe_Shutdown()
             print_session.should_go = False
+        else:
+            print_session.should_go = False
 
-    def home(self , print_session):
+    def _home(self , print_session):
         """
         Opens the home menu and queries the user for axes to move and the various movement modes.
 
@@ -196,7 +225,7 @@ class Input_Handler:
             except Exception as e:
                 print("Error moving " + response + " mm. Error is: " + str(e))
 
-    def move(self , print_session):
+    def _move(self , print_session):
         """
         Queries the user on which axis to move, then prints the possible move types and queries for those.
         Stays active, allowing for multiple inputs until the user enters.
@@ -233,7 +262,7 @@ class Input_Handler:
             except Exception as e:
                 print_session.output_handler.handle("Error moving axis. Error was: " + str(e))
 
-    def get_Pos(self , print_session):
+    def _get_Pos(self , print_session):
         """
         Queries the user for which axis' position to output using the output handler
         in the passed print_session.
@@ -258,34 +287,7 @@ class Input_Handler:
             except Exception as e:
                 print("Error checking position of axis " + response + ". Error is: " + str(e))
 
-    def get_Do_Command(self , print_session):
-        """
-        Queries the user for a command and then does it.
-
-        Parameters:
-            print_session (Print_Session): The print session to act upon.
-        """
-
-        print("")
-        response = input("Enter Command: ").strip().lower()
-
-        if response == "help":
-            self.help()
-        elif response == "choose file":
-            self.choose_File(print_session)
-        elif response == "quit":
-            self.quit(print_session)
-        elif response == "home":
-            self.home(print_session)
-        elif response == "move":
-            self.move(print_session)
-        elif response == "get pos":
-            self.get_Pos(print_session)
-        elif response == "print":
-            print_session.print()
-
-
-class Print_Input_Handler:
+class Print_Input_Handler(Generic_Print_Input_Handler):
     """
     This is the asynchronous CLI input handler for use during a print.
     """
@@ -296,7 +298,19 @@ class Print_Input_Handler:
         """
         print("Enter h at any time for a list of commands. ")
 
-    def dispatch(self , inp , print_session):
+    def handle(self , print_session):
+        """
+        Handles the buffer of inputs.
+
+        Parameters:
+            print_session (Print_Session): The print session to act upon.
+        """
+
+        while self._line_Ready():
+            cmd = sys.stdin.readline().strip().lower()
+            self._dispatch(cmd , print_session)
+
+    def _dispatch(self , inp , print_session):
         """
         Dispatches a command.
 
@@ -330,21 +344,9 @@ class Print_Input_Handler:
             print_session.printer.set_Heater(1 , 0)
             print_session.stop_print = True
             
-    def line_Ready(self):
+    def _line_Ready(self):
         """
         Checks whether there is an input waiting.
         """
 
         return select.select([sys.stdin] , [] , [] , 0)[0] != []
-
-    def handle(self , print_session):
-        """
-        Handles the buffer of inputs.
-
-        Parameters:
-            print_session (Print_Session): The print session to act upon.
-        """
-
-        while self.line_Ready():
-            cmd = sys.stdin.readline().strip().lower()
-            self.dispatch(cmd , print_session)

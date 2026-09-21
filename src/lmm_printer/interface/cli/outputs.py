@@ -1,4 +1,5 @@
 from lmm_printer.core.types import Result , State
+from lmm_printer.interface.outputs import Generic_Output_Handler
 
 class Non_Logger:
     """
@@ -12,7 +13,7 @@ class Non_Logger:
 
         return
 
-class Output_Handler:
+class Output_Handler(Generic_Output_Handler):
     """
     The main CLI output handler. Just prints and logs outputs.
 
@@ -40,13 +41,13 @@ class Output_Handler:
         """
 
         if isinstance(message , str):
-            self.handle_String(message)
+            self._handle_String(message)
         elif isinstance(message , Result):
-            self.handle_Result(message)
+            self._handle_Result(message)
         else:
-            self.handle_Unknown_Type(message)
+            self._handle_Unknown_Type(message)
 
-    def handle_String(self , message):
+    def _handle_String(self , message):
         """
         Prints and logs a string message.
 
@@ -58,7 +59,7 @@ class Output_Handler:
         print(message)
         self.logger.log(message)
 
-    def handle_Result(self , message):
+    def _handle_Result(self , message):
         """
         Prints the message associated with the Result type and logs the result.
 
@@ -70,7 +71,7 @@ class Output_Handler:
         print(message.message)
         self.logger.log(message)
 
-    def handle_Unknown_Type(self , message):
+    def _handle_Unknown_Type(self , message):
         """
         Handles unknown types by logging and printing an error message. Which contains the message.
 
