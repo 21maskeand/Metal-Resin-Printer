@@ -2,11 +2,32 @@ import sys , select
 from lmm_printer.core.types import Result , State
 
 class Input_Handler:
+    """
+    This is the main CLI input handler.
+    """
+
     def suggestion(self):
+        """
+        Prints a helpful suggestion.
+
+        Returns:
+        str: The suggestion message.
+        """
+
         print("")
         print("Enter 'help' for a list of commands. ")
 
     def ask_Yes_No(self , message):
+        """
+        Asks a yes no question to the user.
+
+        Parameters:
+        message (str): The question to be asked.
+
+        Returns:
+        bool: True if the answer was yes, False if the answer was no. 
+        """
+
         print("")
         print(message)
         print("'y' for yes, 'n' for no. ")
@@ -20,6 +41,16 @@ class Input_Handler:
                 print("Enter 'y' or 'n'. ")
 
     def wait_To_Continue(self , message):
+        """
+        Prints a message and waits until the user pressed Enter to continue.
+
+        Parameters:
+        message (str): The message to be printed.
+
+        Returns:
+        None
+        """
+
         print("")
         print(message)
         print("Press Enter to continue. ")
@@ -31,6 +62,16 @@ class Input_Handler:
                 print("Invalid entry. ")
 
     def help(self):
+        """
+        Prints all of the commands.
+
+        Parameters: 
+        None
+
+        Returns:
+        None
+        """
+
         print("")
         print("help: Prints this message. ")
         print("choose file: Enter the file select menu. ")
@@ -41,6 +82,17 @@ class Input_Handler:
         print("print: Prints selected file. ")
 
     def choose_File(self , print_session):
+        """
+        Prints detected files and has the user choose one. 
+        It then sends it to the print_session and has the print session load its attributes.
+
+        Parameters:
+        print_session (Print_Session): The print session to load the chosen file into.
+
+        Returns:
+        None
+        """
+
         from lmm_printer.core.files import return_RM_Drives , get_Files
         from pathlib import Path
 
@@ -75,11 +127,31 @@ class Input_Handler:
         print_session.load_Print_File_Attributes()
 
     def quit(self , print_session):
+        """
+        Safely shuts down the printer and stops print_session.go() by setting the should_go flag to False.
+
+        Parameters:
+        print_session (Print_Session): The current print session.
+
+        Returns:
+        None
+        """
+
         if print_session.hardware_good:
             print_session.printer.safe_Shutdown()
-        raise SystemExit(1)
+            print_session.should_go = False
 
     def home(self , print_session):
+        """
+        Opens the home menu and queries the user for axes to move and the various movement modes.
+
+        Parameters:
+        print_session (Print_Session): The print session to act upon.
+
+        Returns:
+        None
+        """
+
         print("")
         print("Enter 'all' to home all axes. Enter axis number to home that axis. Press enter when finished.")
         print("Enter the axes you want to home one at a time and wait till they are done to continue. Enter 'all' to home all. Press enter once finished. ")
@@ -101,7 +173,18 @@ class Input_Handler:
             except Exception as e:
                 print("Error homing axis " + response + ". Error is: " + str(e))
 
-    def relative(self , print_session , axis_id):
+    def _relative(self , print_session , axis_id):
+        """
+        Queries the user for how many mm to move relative to the current position for a given axis.
+
+        Parameters:
+        print_session (Print_Session): The print session to act upon.
+        axis_id (int): The axis number to move.
+
+        Returns:
+        None
+        """
+
         print("")
         print("Enter the amount of mm you want the axis to move up or down. Press Enter to return. ")
         while True:
@@ -115,7 +198,15 @@ class Input_Handler:
             except Exception as e:
                 print_session.output_handler.handle("Error moving " + response + " mm. Error is: " + str(e))
 
-    def absolute(self , print_session , axis_id):
+    def _absolute(self , print_session , axis_id):
+        """
+        Queries the user for what position a given axis should move.
+
+        Parameters:
+        print_session (Print_Session): The print session to act upon.
+        axis_id (int): The axis number to move.
+        """
+
         print("")
         print("Enter the position you want the axis to move to. Press Enter to return. ")
         while True:
@@ -130,6 +221,17 @@ class Input_Handler:
                 print("Error moving " + response + " mm. Error is: " + str(e))
 
     def move(self , print_session):
+        """
+        Queries the user on which axis to move, then prints the possible move types and queries for those.
+        Stays active, allowing for multiple inputs until the user enters.
+
+        Parameters:
+        print_session (Print_Session): The print session to act upon.
+
+        Returns:
+        None
+        """
+
         while True:
             print("")
             print("Enter the axis to move. Press Enter to return")
@@ -150,9 +252,9 @@ class Input_Handler:
                     print_session.printer.move_Axis_To_Top(axis_id)
                     print_session.printer.save_State()
                 elif response == "relative":
-                    self.relative(print_session , axis_id)
+                    self._relative(print_session , axis_id)
                 elif response == "absolute":
-                    self.absolute(print_session , axis_id)
+                    self._absolute(print_session , axis_id)
                 else:
                     print("Invalid command. ")
             except Exception as e:

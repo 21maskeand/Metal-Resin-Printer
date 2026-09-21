@@ -7,6 +7,7 @@ class Print_Session:
         self.add_State_File_To_Config()
         self.file_good = False
         self.stop_print = False
+        self.should_go = True
 
         if args.gui:
             print("No GUI yet")
@@ -127,5 +128,5 @@ class Print_Session:
     def go(self):
         self.load_Hardware()
         self.input_handler.suggestion()
-        while True:
+        while self.should_go:
             self.input_handler.get_Do_Command(self)

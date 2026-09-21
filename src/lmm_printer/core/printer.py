@@ -1,8 +1,6 @@
 import time
 import RPi.GPIO as GPIO
 from lmm_printer.core.files import save_Printer_State , load_Printer_State
-from lmm_printer.core.user_inputs import user_Continue
-from lmm_printer.core.logs import cli_Log
 from lmm_printer.core.types import State , Printer_State
 from lmm_printer.utils.vendored_handling import silence
 
