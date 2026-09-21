@@ -5,6 +5,13 @@ from pathlib import Path
 from lmm_printer.core.types import Result , State , Printer_State
 
 def return_RM_Drives():
+    """
+    Searches for and returns a result variable with the result of the process.
+
+    Returns:
+        Result: A dataclass decribing the outcomes with fields:
+            value: The 
+    """
     out = subprocess.check_output(["lsblk" , "-J" , "-o" , "NAME,TYPE,RM,FSTYPE,MOUNTPOINT,PATH"] , text=True)
     tree = json.loads(out)
 
