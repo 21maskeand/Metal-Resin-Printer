@@ -15,9 +15,3 @@ if __name__ == "__main__":
     config = load_Config(args.config)
     print_session = Print_Session(args , config)
     print_session.go()
-
-    # if args.gui:
-    #     print("No GUI yet.")
-    # else:
-    #     from lmm_printer.cli_main import main
-    #     main(args , config)

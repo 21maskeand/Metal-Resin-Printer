@@ -38,34 +38,6 @@ def get_Files(drives):
 
     return file_names , file_mnts
 
-def cli_Choose_File(drives):
-    print("")
-    print("Printable Files Found on Removable Drives: ")
-
-    file_names = []
-    file_mnts = []
-    for dev , mnt in drives:
-        root = Path(mnt)
-        for file in root.iterdir():
-            file_names.append(file.name)
-            file_mnts.append(mnt)
-            print(file_names[-1])
-    
-    print("")
-    response = input("Choose file by entering name.extension or press enter to exit. ")
-
-    if response.strip() == "":
-        raise SystemExit(1)
-    else:
-        response = response.strip()
-        if response in file_names:
-            index = file_names.index(response)
-            mnt = file_mnts[index]
-            return Result(value = Path(mnt) / response , state = State.SUCCESS , message = "Successfully chose file: " + response + ", at mount: " + mnt + ".")
-        else:
-            print("File name invalid.")
-            return cli_Choose_File(drives)
-
 def save_Dict(path , data):
     d = os.path.dirname(path)
     fd , temp = tempfile.mkstemp(dir = d)

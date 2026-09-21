@@ -6,7 +6,6 @@ from lmm_printer.core.logs import cli_Log
 from lmm_printer.core.types import State , Printer_State
 from lmm_printer.utils.vendored_handling import silence
 
-
 class Printer:
     def __init__(self , teensy , projector , config):
         self.teensy = teensy
@@ -190,68 +189,3 @@ class Printer:
         self.set_Heater(1 , 0)
         self.teensy.shutdown()
         GPIO.cleanup()
-        
-
-def cli_Preparation(printer):
-    user_Continue("Continue to preparation?" , printer = printer)
-    
-    print("Did any of the axes move since last shutdown?")
-    print("Is this the first time running this machine?")
-    print("Would you like to home all axes regardless of saved positions?")
-    response = input("y for yes to any, n for no to all. ").strip().lower()
-    if response == "y":
-        user_Continue("Continue to homing?" , printer = printer)
-        printer.home_Axes()
-        printer.save_State(safe_shutdown = True)
-
-    state_result = printer.load_State()
-    cli_Log(state_result)
-    if state_result.state == State.ERROR:
-        raise SystemExit(1)
-
-    if not state_result.value["safe_shutdown"]:
-        response = input("Last update was not safe, Home? y for yes, n for no. ").strip().lower()
-        if response == "y":
-            printer.home_Axes()
-    printer.save_State()
-
-    response = input("Would you like to home a specific axis? y for yes, n for no. ").strip().lower()
-    if response == "y":
-        print("Enter the axes you want to home one at a time and wait till they are done to continue. Press enter once finished. ")
-        while True:
-            response = input("").strip()
-            if response == "":
-                break
-            try:
-                axis_id = int(response)
-                if (axis_id < 0) or (axis_id >= 3):
-                    raise ValueError("Axis ID: " + str(axis_id) + " invalid.")
-                printer.home_Axis(axis_id)
-            except Exception as e:
-                print("Error homing axis " + response + ". Error is: " + str(e))
-
-    response = input("Is everything ready to go? y for yes, n for no. ").strip().lower()
-    if response != "y":
-        response = input("Are you loading new slurry? y for yes, n for no. ").strip().lower()
-        if response == "y":
-            user_Continue("Unload current slurry / bring the plate to top?" , printer = printer)
-            printer.move_Axis_To_Top(0)
-            printer.save_State()
-            user_Continue("Done placing slurry on plate?" , printer = printer)
-            
-        response = input("Is the slurry flush with the material plate? y for yes, n for no. ").strip().lower()
-        if response != "y":
-            print("Adjust the reservoir until the slurry block is flush with the material plate.")
-            print("Enter the amount of mm you want the reservoir to move up or down. Press enter once finished. ")
-            while True:
-                response = input("").strip()
-                if response == "":
-                    break
-                try:
-                    move = float(response)
-                    printer.move_Axis_Relative(0 , move)
-                    printer.save_State()
-                except Exception as e:
-                    print("Error moving " + response + " mm. Error is: " + str(e))
-
-    printer.save_State()
