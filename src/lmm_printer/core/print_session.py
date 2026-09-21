@@ -25,7 +25,7 @@ class Print_Session:
     def __init__(self , args , config):
         self.args = args
         self.config = config
-        self.add_State_File_To_Config()
+        self._add_State_File_To_Config()
         self.file_good = False
         self.stop_print = False
         self.should_go = True
@@ -47,7 +47,11 @@ class Print_Session:
         self.print_input_handler = Print_Input_Handler()
         self.output_handler = Output_Handler(self.args , self.config)
 
-    def add_State_File_To_Config(self):
+    def _add_State_File_To_Config(self):
+        """
+        Adds the state file to the config.
+        """
+
         from platformdirs import user_state_path
 
         state_dir = user_state_path(self.config["files"]["app_name"] , ensure_exists = True)
@@ -55,6 +59,10 @@ class Print_Session:
         self.config["files"]["state_file"] = state_file
 
     def load_Hardware(self):
+        """
+        Loads hardware.
+        """
+
         from lmm_printer.teensy.establish import return_Teensy_Serial
         from lmm_printer.projector.establish import return_Projector
         from lmm_printer.core.printer import Printer
@@ -87,6 +95,10 @@ class Print_Session:
             self.hardware_good = False
 
     def load_Print_File_Attributes(self):
+        """
+        Loads the print file attributes.
+        """
+
         from lmm_printer.core.types import Print_File
 
         if not hasattr(self , "file"):
@@ -112,6 +124,10 @@ class Print_Session:
         self.file_good = True
 
     def print(self):
+        """
+        Checks whether everything is read to print and prints if so.
+        """
+
         from time import monotonic
         from lmm_printer.core.types import Print_File
         from lmm_printer.utils.vendored_handling import silence
@@ -151,6 +167,10 @@ class Print_Session:
             self.output_handler.handle("Layer " + str(i) + " done. Took: " + str(end_time - start_time) + " seconds.")
         
     def go(self):
+        """
+        Starts accepting commands and proceeds until the should_go flag is set to False.
+        """
+
         self.load_Hardware()
         self.input_handler.suggestion()
         while self.should_go:
