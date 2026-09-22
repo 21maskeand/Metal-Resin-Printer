@@ -106,7 +106,7 @@ class Print_Session:
             return
         with Print_File(self.file) as print_file:
             num_layers = print_file.get_Num_Layers()
-            image_result = print_file.get_Image(round(num_layers*.75))
+            image_result = print_file.get_Image(1)
             options_result = print_file.get_Options()
         
         print_file_error = False

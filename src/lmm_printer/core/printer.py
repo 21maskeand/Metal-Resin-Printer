@@ -105,9 +105,14 @@ class Printer:
         else:
             return False
 
+    def init_Print(self , image_1 , options):
+        self.projector.send_pixeldata_to_buffer(image_1)
+        self.move_Axis_Relative(1 , -options["layer_thickness"])
+        self.save_State()
+
+
     def do_Current_Layer(self , next_image , options):                
         self.move_Axis_Relative(0 , self.config["reservoir"]["extrude_multiple"] * options["layer_thickness"])
-        self.move_Axis_Relative(1 , -options["layer_thickness"])
         self.save_State()
 
         self.move_Axis_To_Top(2)
