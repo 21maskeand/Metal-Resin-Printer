@@ -69,3 +69,4 @@ for iteration in range(options["num_layers"]):
             break
 
 
+print_session.go()
