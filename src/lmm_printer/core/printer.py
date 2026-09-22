@@ -106,21 +106,23 @@ class Printer:
             return False
 
     def init_Print(self , image_1 , options):
-        self.projector.send_pixeldata_to_buffer(image_1)
-        self.move_Axis_Relative(1 , -options["layer_thickness"])
-        self.save_State()
+        with silence():
+            self.projector.send_pixeldata_to_buffer(image_1 , 0 , 0)
 
+    def end_Print(self , options):
+        self.move_Axis_Relative(0 , self.config["recoater"]["vertical_pullback"], wait = False , listen = False)
+        self.save_State()
 
     def do_Current_Layer(self , next_image , options):                
-        self.move_Axis_Relative(0 , self.config["reservoir"]["extrude_multiple"] * options["layer_thickness"])
-        self.save_State()
+        self.move_Axis_Relative(0 , self.config["reservoir"]["extrude_multiple"] * options["layer_thickness"] + self.config["recoater"]["vertical_pullback"] , wait = False , listen = False)
+        self.move_Axis_Relative(1 , -options["layer_thickness"] , wait = False , listen = False)
 
         self.move_Axis_To_Top(2)
         self.save_State()
 
-        self.move_Axis_Relative(0 , -self.config["recoater"]["vertical_pullback"] , wait = False)
-        self.move_Axis_Relative(1 , -self.config["recoater"]["vertical_pullback"] , wait = False)
-        self.wait_For_Response()
+        self.move_Axis_Relative(0 , -self.config["recoater"]["vertical_pullback"] , wait = False , listen = False)
+        self.move_Axis_Relative(1 , -self.config["recoater"]["vertical_pullback"] , wait = False , listen = False)
+
         self.move_Axis_Absolute(2 , 0 , wait = False , listen = False)
         while True:
             recoater_pos = self.get_Axis_Position(2)
@@ -134,7 +136,8 @@ class Printer:
             self.projector.swap_buffer()
             exposure_start_time = time.monotonic()
             self.projector.expose_pattern(exposed_frames = int(60 * options["exposure_time"]))
-            self.projector.send_pixeldata_to_buffer(next_image , 0 , 0)
+            if next_image is not None:
+                self.projector.send_pixeldata_to_buffer(next_image , 0 , 0)
 
         while True:
             if time.monotonic() - exposure_start_time > options["exposure_time"]:
@@ -142,7 +145,6 @@ class Printer:
 
         self.listening_for.append("M2")
         self.wait_For_Response()
-        self.move_Axis_Relative(0 , self.config["recoater"]["vertical_pullback"])
 
         self.save_State()
 

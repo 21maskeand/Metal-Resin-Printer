@@ -1,4 +1,6 @@
 import numpy as np
+import os
+import re
 from dataclasses import dataclass , field
 from enum import Enum
 from typing import Generic , TypeVar
@@ -44,7 +46,10 @@ class NanoDLP_File:
             return Result(value = None , state = State.ERROR , message = "Likely one of the image dimensions isn't divisible by 3 (for nanodlp). Try to flip axes in slicer. Error was: " + str(e)) 
 
     def get_Num_Layers(self):
-        return len([n for n in self._zip.namelist() if n.lower().endswith(".png")])
+        return len([
+            n for n in self._zip.namelist() 
+            if re.fullmatch(r"\d+\.png" , os.path.basename(n).lower())
+        ])
 
     def get_Options(self):
         try:

@@ -158,13 +158,15 @@ class Print_Session:
                     
                 if i == 1:
                     this_image = print_file.get_Image(i).value
-                    with silence():
-                        self.printer.projector.send_pixeldata_to_buffer(this_image , 0 , 0)
+                    self.printer.init_Print(this_image , self.options)
+                    # with silence():
+                    #     self.printer.projector.send_pixeldata_to_buffer(this_image , 0 , 0)
 
             start_time = monotonic()
             self.printer.do_Current_Layer(next_image , self.options)
             end_time = monotonic()
-            self.output_handler.handle("Layer " + str(i) + " done. Took: " + str(end_time - start_time) + " seconds.")
+            self.output_handler.handle("Layer " + str(i) + " of " + str(self.num_layers) + " done. Took: " + str(end_time - start_time) + " seconds.")
+        self.printer.end_Print(options)
         
     def go(self):
         """

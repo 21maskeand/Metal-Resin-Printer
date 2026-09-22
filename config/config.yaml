@@ -17,8 +17,6 @@ recoater:
   temp: 23
   valid_diff: 5
   vertical_pullback: 2
-  vertical_pullback_time: 0.2
-  time_to_build_plate: 3.0
   clear_pos: 140
 
 reservoir:

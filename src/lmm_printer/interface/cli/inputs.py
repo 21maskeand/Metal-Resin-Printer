@@ -271,21 +271,25 @@ class Input_Handler(Generic_Input_Handler):
             print_session (Print_Session): The print session to act upon.
         """
 
-        print("")
-        print("Enter the axis number to see its position. Press enter when finished.")
-        while True:
-            response = input("").strip()
-            if response == "":
-                break
-            try:
-                axis_id = int(response)
-                if (axis_id < 0) or (axis_id >= 3):
-                    print_session.output_handler.handle("Axis ID: " + str(axis_id) + " invalid.")
-                    continue
-                pos = print_session.printer.get_Axis_Position(axis_id)
-                print_session.output_handler.handle("Position of axis " + str(axis_id) + " is " + str(pos))
-            except Exception as e:
-                print("Error checking position of axis " + response + ". Error is: " + str(e))
+        # print("")
+        # print("Enter the axis number to see its position. Press enter when finished.")
+        # while True:
+        #     response = input("").strip()
+        #     if response == "":
+        #         break
+        #     try:
+        #         axis_id = int(response)
+        #         if (axis_id < 0) or (axis_id >= 3):
+        #             print_session.output_handler.handle("Axis ID: " + str(axis_id) + " invalid.")
+        #             continue
+        #         pos = print_session.printer.get_Axis_Position(axis_id)
+        #         print_session.output_handler.handle("Position of axis " + str(axis_id) + " is " + str(pos))
+        #     except Exception as e:
+        #         print("Error checking position of axis " + response + ". Error is: " + str(e))
+
+        for axis_id in range(3):
+            pos = print_session.printer.get_Axis_Position(axis_id)
+            print_session.output_handler.handle("Position of axis " + str(axis_id) + " is " + str(pos))
 
 class Print_Input_Handler(Generic_Print_Input_Handler):
     """
