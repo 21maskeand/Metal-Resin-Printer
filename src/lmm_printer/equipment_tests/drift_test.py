@@ -15,32 +15,10 @@ config = load_Config(args.config)
 print_session = Print_Session(args , config)
 print_session.load_Hardware()
 print_session.printer.home_Axes()
-# print_session.printer.move_Axis_To_Top(0)
 print_session.printer.move_Axis_Absolute(0 , 80)
-# print_session.printer.move_Axis_Relative(1 , -5)
 
-# iteration = 0
-# while True:
-    
-#     print_session.printer.move_Axis_Relative(0 , -.5 , wait = False)
-#     print_session.printer.move_Axis_Relative(1 , -.5 , wait = False)
-#     print_session.printer.move_Axis_Relative(2 , 1 , wait = False)
-#     print_session.printer.wait_For_Response()
 
-#     print_session.printer.move_Axis_Relative(0 , .5 , wait = False)
-#     print_session.printer.move_Axis_Relative(1 , .5 , wait = False)
-#     print_session.printer.move_Axis_Relative(2 , -1 , wait = False)
-#     print_session.printer.wait_For_Response()
-
-#     print_session.output_handler.handle("Iteration: " + str(iteration) + " done.")
-#     iteration += 1
-
-#     if print_session.print_input_handler._line_Ready():
-#         cmd = sys.stdin.readline().strip().lower()
-#         if cmd == "end":
-#             break
-
-options = {"layer_thickness": .05 , "num_layers": 70}
+options = {"layer_thickness": .05 , "num_layers": 350}
 self = print_session.printer   
 
 def do_Current_Layer():
@@ -69,4 +47,6 @@ for iteration in range(options["num_layers"]):
             break
 
 
-print_session.go()
+print_session.input_handler.suggestion()
+while print_session.should_go:
+    print_session.input_handler.get_Do_Command(print_session)
