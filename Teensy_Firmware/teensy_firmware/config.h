@@ -7,10 +7,10 @@ constexpr int m0 = 9 , m1 = 10 , m2 = 11;
 constexpr int microstepping_mode_to_pins[6][3] = 
 {
   {0 , 0 , 0} , // Full Step , Mode 0
-  {0 , 0 , 1} , // 1/2 Step  , Mode 1
+  {1 , 0 , 0} , // 1/2 Step  , Mode 1
   {0 , 1 , 0} , // 1/4 Step  , Mode 2
-  {0 , 1 , 1} , // 1/8 Step  , Mode 3
-  {1 , 0 , 0} , // 1/16 Step , Mode 4
+  {1 , 1 , 0} , // 1/8 Step  , Mode 3
+  {0 , 0 , 1} , // 1/16 Step , Mode 4
   {1 , 1 , 1}   // 1/32 Step , Mode 5
 };
 constexpr int microstepping_mode_to_steps[6] = {1 , 2 , 4 , 8 , 16 , 32};
