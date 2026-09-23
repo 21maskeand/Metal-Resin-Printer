@@ -166,7 +166,6 @@ class Print_Session:
             self.printer.do_Current_Layer(next_image , self.options)
             end_time = monotonic()
             self.output_handler.handle("Layer " + str(i) + " of " + str(self.num_layers) + " done. Took: " + str(end_time - start_time) + " seconds.")
-        self.printer.end_Print(options)
         
     def go(self):
         """
