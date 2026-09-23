@@ -142,7 +142,7 @@ class Print_Session:
         self.print_input_handler.suggestion()
         self.printer.start_Heaters()
         for i in range(1 , self.num_layers + 1):
-            while True:
+            while not self.stop_print:
                 self.print_input_handler.handle(self)
                 if self.printer.check_Heaters():
                     break

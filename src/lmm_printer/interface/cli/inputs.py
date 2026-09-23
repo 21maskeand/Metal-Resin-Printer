@@ -328,6 +328,7 @@ class Print_Input_Handler(Generic_Print_Input_Handler):
             print("h: Prints this message.")
             print("p: Pauses the printer.")
             print("q: Safely quits the process.")
+            print("t: Show the temperatures of probes. ")
             print("Note - neither pausing nor quitting will stop axes from completing their current move.")
             print("")
 
@@ -347,6 +348,11 @@ class Print_Input_Handler(Generic_Print_Input_Handler):
             print_session.printer.set_Heater(0 , 0)
             print_session.printer.set_Heater(1 , 0)
             print_session.stop_print = True
+
+        elif inp == "t":
+            print("Chamber: " + str(print_session.printer.get_Temp(0)))
+            print("Recoater Heater: " + str(print_session.printer.get_Temp(1)))
+            print("Recoater Front: " + str(print_session.printer.get_Temp(2)))
             
     def _line_Ready(self):
         """

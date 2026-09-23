@@ -10,11 +10,11 @@ projector:
   num_pixels_y: 1440
 
 chamber:
-  temp: 23
+  temp: 40
   valid_diff: 5
 
 recoater:
-  temp: 23
+  temp: 40
   valid_diff: 5
   vertical_pullback: 2
   clear_pos: 140
