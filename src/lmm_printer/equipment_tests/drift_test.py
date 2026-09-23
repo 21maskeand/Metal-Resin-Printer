@@ -18,10 +18,10 @@ print_session.printer.home_Axes()
 print_session.printer.move_Axis_Absolute(0 , 80)
 
 
-options = {"layer_thickness": .05 , "num_layers": 350}
+options = {"layer_thickness": .05 , "num_layers": 210}
 self = print_session.printer   
 
-def do_Current_Layer():
+def do_Current_Layer_Fast():
     self.move_Axis_Relative(0 , self.config["reservoir"]["extrude_multiple"] * options["layer_thickness"] + self.config["recoater"]["vertical_pullback"] , wait = False)
     self.move_Axis_Relative(1 , -options["layer_thickness"] , wait = False)
     self.wait_For_Response()
@@ -31,6 +31,13 @@ def do_Current_Layer():
     self.wait_For_Response()
 
     self.move_Axis_Relative(1 , self.config["recoater"]["vertical_pullback"])
+
+    self.save_State()
+
+def do_Current_Layer():
+    self.move_Axis_Relative(0 , self.config["reservoir"]["extrude_multiple"] * options["layer_thickness"] , wait = False)
+    self.move_Axis_Relative(1 , -options["layer_thickness"] , wait = False)
+    self.wait_For_Response()
 
     self.save_State()
 
